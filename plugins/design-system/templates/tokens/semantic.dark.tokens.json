@@ -1,0 +1,74 @@
+{
+  "$description": "SEMANTIC tier, dark theme. Same paths as semantic.light — a missing path here is a hole in the theme. Dark is NOT an inversion: elevation reverses (raised surfaces get lighter, not shadowed), saturated colours are pulled back, and pure white on pure black is harsher than paper ever is.",
+  "color": {
+    "$type": "color",
+    "bg": {
+      "default":       { "$value": "{color.neutral.1000}", "$description": "Page background — near-black, not black" },
+      "surface":       { "$value": "{color.neutral.950}",  "$description": "Cards sit LIGHTER than the page: shadow on near-black is invisible" },
+      "raised":        { "$value": "{color.neutral.900}",  "$description": "Popovers — one step lighter again" },
+      "sunken":        { "$value": "{color.black}" },
+      "subtle":        { "$value": "{color.neutral.900}" },
+      "subtle-hover":  { "$value": "{color.neutral.800}" },
+      "subtle-active": { "$value": "{color.neutral.700}" },
+      "accent":        { "$value": "{color.accent.600}" },
+      "accent-hover":  { "$value": "{color.accent.500}",  "$description": "Hover moves TOWARD the light in dark themes" },
+      "accent-active": { "$value": "{color.accent.400}" },
+      "accent-subtle": { "$value": "{color.accent.1000}" },
+      "success":       { "$value": "{color.success.700}" },
+      "success-subtle":{ "$value": "{color.success.1000}" },
+      "warning":       { "$value": "{color.warning.500}" },
+      "warning-subtle":{ "$value": "{color.warning.1000}" },
+      "danger":        { "$value": "{color.danger.600}" },
+      "danger-hover":  { "$value": "{color.danger.500}" },
+      "danger-subtle": { "$value": "{color.danger.1000}" },
+      "disabled":      { "$value": "{color.neutral.800}" },
+      "overlay":       { "$value": "oklch(0 0 0 / 0.7)" }
+    },
+    "fg": {
+      "default":    { "$value": "{color.neutral.100}", "$description": "Not pure white — #fff on near-black is harsher than paper" },
+      "muted":      { "$value": "{color.neutral.500}" },
+      "subtle":     { "$value": "{color.neutral.600}",
+                      "$extensions": { "design-system": { "contrast": { "min": 3 } } } },
+      "disabled":   { "$value": "{color.neutral.700}",
+                      "$extensions": { "design-system": { "contrast": { "skip": true } } } },
+      "accent":     { "$value": "{color.accent.400}",  "$description": "Links lift in dark: a 700-step blue disappears into the page" },
+      "success":    { "$value": "{color.success.400}" },
+      "warning":    { "$value": "{color.warning.400}" },
+      "danger":     { "$value": "{color.danger.400}" },
+      "on-accent":  { "$value": "{color.white}" },
+      "on-success": { "$value": "{color.white}" },
+      "on-warning": { "$value": "{color.neutral.1000}" },
+      "on-danger":  { "$value": "{color.white}" }
+    },
+    "border": {
+      "default": { "$value": "{color.neutral.800}" },
+      "subtle":  { "$value": "{color.neutral.900}" },
+      "strong":  { "$value": "{color.neutral.700}" },
+      "accent":  { "$value": "{color.accent.600}" },
+      "danger":  { "$value": "{color.danger.600}" }
+    },
+    "ring": { "$value": "{color.accent.400}", "$description": "Lifted so the ring stays visible against dark surfaces" }
+  },
+
+  "shadow": {
+    "$type": "shadow",
+    "$description": "Much subtler than light — shadows barely register on near-black, so elevation is carried by surface lightness. These exist for edge definition only.",
+    "raised": {
+      "$value": [
+        { "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 1, "unit": "px" }, "blur": { "value": 2, "unit": "px" }, "spread": { "value": 0, "unit": "px" }, "color": "rgb(0 0 0 / 0.30)" }
+      ]
+    },
+    "overlay": {
+      "$value": [
+        { "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 4, "unit": "px" },  "blur": { "value": 12, "unit": "px" }, "spread": { "value": 0, "unit": "px" }, "color": "rgb(0 0 0 / 0.40)" },
+        { "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 1, "unit": "px" },  "blur": { "value": 0, "unit": "px" },  "spread": { "value": 0, "unit": "px" }, "color": "rgb(255 255 255 / 0.04)" }
+      ]
+    },
+    "modal": {
+      "$value": [
+        { "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 16, "unit": "px" }, "blur": { "value": 40, "unit": "px" }, "spread": { "value": 0, "unit": "px" }, "color": "rgb(0 0 0 / 0.55)" },
+        { "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 1, "unit": "px" },  "blur": { "value": 0, "unit": "px" },  "spread": { "value": 0, "unit": "px" }, "color": "rgb(255 255 255 / 0.06)" }
+      ]
+    }
+  }
+}

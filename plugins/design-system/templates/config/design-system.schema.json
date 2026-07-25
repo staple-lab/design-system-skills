@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://staple-lab.github.io/design-system-skills/design-system.schema.json",
+  "title": "Design system brief",
+  "description": "The contract produced by /design-system:init and consumed by every other command, the token build, the lint rules and the inventory site.",
+  "type": "object",
+  "required": ["name", "stack", "paths"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "$comment": { "type": "string" },
+    "name": { "type": "string", "description": "Machine name, kebab-case" },
+    "displayName": { "type": "string" },
+    "version": { "type": "string" },
+
+    "stack": {
+      "type": "object",
+      "required": ["framework", "primitives", "cssSystem"],
+      "properties": {
+        "framework": { "enum": ["react"] },
+        "primitives": { "enum": ["base-ui", "radix", "react-aria", "ark", "headless-ui", "none"] },
+        "componentLayer": { "enum": ["own", "none", "mui", "mantine", "chakra", "heroui", "antd", "park", "radix-themes"] },
+        "cssSystem": { "enum": ["tailwind", "css-modules", "stylex", "vanilla-extract", "panda", "emotion", "styled-components", "unocss"] },
+        "motion": { "enum": ["motion", "gsap", "css", "motion+gsap", "react-spring", "none"] },
+        "rationale": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+
+    "paths": {
+      "type": "object",
+      "required": ["root", "tokens", "components"],
+      "properties": {
+        "root": { "type": "string" },
+        "tokens": { "type": "string" },
+        "components": { "type": "string" },
+        "registry": { "type": "string" },
+        "inventory": { "type": "string" }
+      }
+    },
+
+    "tokens": {
+      "type": "object",
+      "properties": {
+        "prefix": { "type": "string", "description": "CSS custom property prefix, without dashes. 'ds' → --ds-color-bg-accent" },
+        "themes": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "defaultTheme": { "type": "string" },
+        "darkTheme": { "type": ["string", "null"] },
+        "brands": { "type": "array", "items": { "type": "string" } },
+        "contrast": {
+          "type": "object",
+          "properties": {
+            "level": { "enum": ["AA", "AAA"] },
+            "enforce": { "type": "boolean" }
+          }
+        },
+        "density": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "typography": {
+      "type": "object",
+      "properties": {
+        "source": { "enum": ["system", "google-fonts", "self-hosted", "licensed"] },
+        "sans": { "type": "string" },
+        "serif": { "type": "string" },
+        "mono": { "type": "string" },
+        "scale": { "type": "number", "minimum": 1, "maximum": 2 }
+      }
+    },
+
+    "distribution": {
+      "type": "object",
+      "properties": {
+        "mode": { "enum": ["in-repo", "workspace", "private-npm", "public-npm"] },
+        "packageName": { "type": ["string", "null"] },
+        "registryUrl": { "type": ["string", "null"] }
+      }
+    },
+
+    "conventions": {
+      "type": "object",
+      "properties": {
+        "polymorphism": { "enum": ["render", "asChild", "as", "none"] },
+        "variantProp": { "type": "string" },
+        "sizeProp": { "type": "string" },
+        "stateAttributes": { "enum": ["data-*", "class", "both"] },
+        "classNamePassthrough": { "type": "boolean" },
+        "namingCase": { "enum": ["PascalCase"] },
+        "compoundParts": { "type": "boolean" }
+      }
+    },
+
+    "quality": {
+      "type": "object",
+      "properties": {
+        "testRunner": { "enum": ["vitest", "jest"] },
+        "a11y": {
+          "type": "object",
+          "properties": {
+            "axe": { "type": "boolean" },
+            "keyboardTests": { "type": "boolean" },
+            "level": { "enum": ["A", "AA", "AAA"] }
+          }
+        },
+        "visualRegression": { "enum": ["playwright", "chromatic", "none"] },
+        "coverageFloor": { "type": "number", "minimum": 0, "maximum": 100 },
+        "lint": {
+          "type": "object",
+          "properties": {
+            "tokenEnforcement": { "enum": ["off", "warn", "error"] },
+            "importBoundaries": { "enum": ["off", "warn", "error"] },
+            "jsxA11y": { "enum": ["off", "warn", "error"] }
+          }
+        }
+      }
+    },
+
+    "inventory": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "showTestStatus": { "type": "boolean" },
+        "showAdoption": { "type": "boolean" },
+        "lifecycleStages": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "ai": {
+      "type": "object",
+      "properties": {
+        "generateAgentsMd": { "type": "boolean" }
+      }
+    }
+  }
+}

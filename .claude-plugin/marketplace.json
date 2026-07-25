@@ -1,0 +1,30 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "design-system-skills",
+  "description": "Staple Lab toolkit for building and maintaining production design systems and frontends",
+  "owner": {
+    "name": "Staple Lab",
+    "url": "https://github.com/staple-lab"
+  },
+  "plugins": [
+    {
+      "name": "design-system",
+      "source": "./plugins/design-system",
+      "description": "Interview-driven design system builder for React. Picks your primitive layer (Base UI / Radix / React Aria), component layer (shadcn, MUI, Mantine...), CSS system (Tailwind v4, CSS Modules, StyleX, vanilla-extract, Panda) and motion library (Motion, GSAP), then scaffolds DTCG design tokens, themed components, a searchable component inventory site, behavioural + a11y tests, token-enforcement lint rules, and optional npm packaging — all driven by one machine-readable registry that both humans and AI agents consume.",
+      "category": "design",
+      "keywords": [
+        "design-system",
+        "design-tokens",
+        "react",
+        "tailwind",
+        "radix",
+        "base-ui",
+        "react-aria",
+        "shadcn",
+        "storybook",
+        "accessibility",
+        "component-library"
+      ]
+    }
+  ]
+}

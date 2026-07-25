@@ -1,0 +1,34 @@
+{
+  "$description": "COMPONENT tier — knobs a component genuinely needs and nothing else does. Easy to overdo: `card.padding` is usually just `space.6`, and every unnecessary component token is another thing to maintain in every theme. Add one when a component must be re-skinnable independently of the semantics.",
+  "control": {
+    "$description": "Shared by every form control so a Button, Input and Select line up on the same row without anyone measuring.",
+    "height": {
+      "$type": "dimension",
+      "sm": { "$value": { "value": 32, "unit": "px" } },
+      "md": { "$value": { "value": 40, "unit": "px" }, "$description": "Default. 40px keeps the 44px touch target once you count the focus ring" },
+      "lg": { "$value": { "value": 48, "unit": "px" } }
+    },
+    "padding-x": {
+      "$type": "dimension",
+      "sm": { "$value": "{space.3}" },
+      "md": { "$value": "{space.4}" },
+      "lg": { "$value": "{space.5}" }
+    },
+    "radius": { "$type": "dimension", "$value": "{radius.md}" },
+    "gap":    { "$type": "dimension", "$value": "{space.2}", "$description": "Icon-to-label inside a control" }
+  },
+  "focus": {
+    "$type": "dimension",
+    "ring-width":  { "$value": { "value": 2, "unit": "px" } },
+    "ring-offset": { "$value": { "value": 2, "unit": "px" }, "$description": "The offset is what makes one ring work on any background" }
+  },
+  "card": {
+    "padding": { "$type": "dimension", "$value": "{space.6}" },
+    "radius":  { "$type": "dimension", "$value": "{radius.lg}" }
+  },
+  "dialog": {
+    "max-width": { "$type": "dimension", "$value": { "value": 32, "unit": "rem" } },
+    "padding":   { "$type": "dimension", "$value": "{space.6}" },
+    "radius":    { "$type": "dimension", "$value": "{radius.xl}" }
+  }
+}

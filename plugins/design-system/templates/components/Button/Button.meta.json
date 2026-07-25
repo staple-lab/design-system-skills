@@ -1,0 +1,102 @@
+{
+  "$comment": "The judgement calls — everything that cannot be extracted from code. Props, tokens, tests and adoption are generated; this file holds what a human decided. Keep it honest: it is what the inventory site and AGENTS.md publish.",
+
+  "status": "stable",
+  "since": "0.1.0",
+  "category": "Actions",
+  "summary": "Triggers an action. The default interactive element of the system.",
+  "description": "Button covers every action a user takes in place — submitting, confirming, opening an overlay, running a command. It handles focus rings, disabled and loading semantics, icon slots and hit-target sizing so callers do not have to.",
+
+  "synonyms": ["cta", "action", "submit", "click", "btn"],
+
+  "useFor": [
+    "Actions the user takes: save, delete, confirm, open a dialog",
+    "Submitting a form (`type=\"submit\"`)",
+    "Icon-only affordances in dense toolbars (with a required aria-label)"
+  ],
+  "dontUseFor": [
+    "Navigation — use Link, or `render={<a href/>}` so it is a real anchor",
+    "Toggling a persistent binary state — use Switch or ToggleButton, which announce their state",
+    "A whole clickable card — put the button inside it, so the accessible name is the action and not the card's entire text"
+  ],
+
+  "keyboard": [
+    { "keys": "Enter", "action": "Activates the button" },
+    { "keys": "Space", "action": "Activates the button" },
+    { "keys": "Tab", "action": "Moves focus in; a `disabled` button is skipped, an `aria-disabled` one is not" }
+  ],
+
+  "a11y": {
+    "role": "button",
+    "provides": [
+      "Native <button> semantics, so Enter/Space and form submission work without JS",
+      "A visible :focus-visible ring at ≥3:1 against both the button and the page",
+      "aria-busy and a screen-reader-only status while loading",
+      "aria-disabled rather than disabled while loading, so the control stays reachable and can explain itself",
+      "A ≥44px tap target via a pseudo-element, without changing the visual size"
+    ],
+    "consumerMustProvide": [
+      "aria-label when there is no text child — enforced by the prop types, not by review",
+      "An accessible name that describes the ACTION ('Delete project'), not the icon ('trash')",
+      "type=\"submit\" inside a form; the default is deliberately type=\"button\" to avoid accidental submits"
+    ],
+    "limitations": [
+      "A `disabled` button is invisible to screen readers browsing by control. When the reason matters, prefer keeping it enabled and explaining the failure on activation."
+    ]
+  },
+
+  "doDont": [
+    {
+      "do": "Label the action: 'Delete project'",
+      "dont": "Label the mechanism: 'OK', 'Submit', 'Click here'",
+      "why": "Screen-reader users often navigate by pulling up a list of buttons, out of context. Nine buttons called 'OK' is nine identical entries."
+    },
+    {
+      "do": "One primary button per view",
+      "dont": "Three primaries side by side",
+      "why": "Emphasis is relative. When everything is primary, the variant carries no information and the user has to read all three."
+    },
+    {
+      "do": "Use `loading` while an action is in flight",
+      "dont": "Swap the label for 'Saving…' by hand",
+      "why": "`loading` keeps the width stable, announces via aria-busy, and blocks double-submits. A manual swap does none of that and reflows the row."
+    },
+    {
+      "do": "`render={<a href=\"/pricing\" />}` for navigation styled as a button",
+      "dont": "`<Button onClick={() => router.push('/pricing')}>`",
+      "why": "An onClick handler is not a link: no middle-click, no cmd-click, no right-click 'open in new tab', no href for the status bar, and screen readers announce the wrong role."
+    }
+  ],
+
+  "examples": [
+    {
+      "title": "Variants",
+      "description": "Emphasis, from most to least. `danger` is for destructive actions only — overuse blunts it.",
+      "code": "<Button variant=\"primary\">Save changes</Button>\n<Button variant=\"secondary\">Cancel</Button>\n<Button variant=\"ghost\">Learn more</Button>\n<Button variant=\"danger\">Delete project</Button>"
+    },
+    {
+      "title": "Sizes",
+      "description": "`md` is the default and the right answer almost always. `sm` for dense toolbars, `lg` for a single prominent call to action.",
+      "code": "<Button size=\"sm\">Small</Button>\n<Button size=\"md\">Medium</Button>\n<Button size=\"lg\">Large</Button>"
+    },
+    {
+      "title": "Loading",
+      "description": "The label stays laid out under the spinner, so the button does not resize and the row does not reflow.",
+      "code": "<Button loading>Save changes</Button>"
+    },
+    {
+      "title": "Icon only",
+      "description": "aria-label is required by the type — this will not compile without it.",
+      "code": "<Button variant=\"ghost\" size=\"sm\" aria-label=\"Dismiss notification\">\n  <XIcon />\n</Button>"
+    },
+    {
+      "title": "As a link",
+      "description": "Keeps the button's appearance and the anchor's behaviour.",
+      "code": "<Button render={<a href=\"/pricing\" />}>See pricing</Button>"
+    }
+  ],
+
+  "related": ["ButtonGroup", "IconButton", "Link", "ToggleButton"],
+
+  "shadowImplementations": []
+}

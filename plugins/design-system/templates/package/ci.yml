@@ -1,0 +1,83 @@
+# .github/workflows/design-system.yml
+#
+# The gate order matters: cheap checks first, and the two checks that make the whole
+# system trustworthy — the CONTRAST gate and the REGISTRY staleness check — run every time.
+# Without them, "accessible" and "the docs are current" are claims rather than facts.
+
+name: design system
+
+on:
+  push: { branches: [main] }
+  pull_request:
+
+concurrency:
+  group: ds-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v5
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Fails the build on any foreground/background pair below its required ratio.
+      # A contrast failure that a human has to notice is a contrast failure that ships.
+      - name: Tokens + contrast gate
+        run: npm run tokens
+
+      - name: Generated token output is committed
+        run: git diff --exit-code tokens/dist || (echo "::error::tokens/dist is stale — run 'npm run tokens' and commit" && exit 1)
+
+      - name: Tests (behaviour + a11y)
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
+      # Lint the DIFF at error level while the backlog is still being worked through, so
+      # new code is clean from day one without the old code blocking anyone.
+      - name: Design system rules on changed files
+        if: github.event_name == 'pull_request'
+        run: |
+          FILES=$(git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD -- '*.ts' '*.tsx' | tr '\n' ' ')
+          if [ -n "$FILES" ]; then npx eslint --max-warnings=0 $FILES; fi
+
+      # The single check that makes "the docs are always current" true rather than aspirational.
+      - name: Registry is current
+        run: npm run lint:report && npm run registry:check
+
+      - name: Build package
+        run: npm run build
+
+      - name: Packaging is correct
+        run: npx publint && npx attw --pack
+
+      - name: Build inventory
+        run: npm run inventory:build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: inventory
+          path: inventory/dist
+
+  visual:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run tokens && npm run test:vrt
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: vrt-diffs
+          path: test-results

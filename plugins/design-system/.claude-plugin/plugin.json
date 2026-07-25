@@ -1,0 +1,28 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "design-system",
+  "version": "0.1.0",
+  "description": "Build and maintain a production React design system. Interviews you for your primitive layer, component layer, CSS system, colour, typography and motion library, then scaffolds DTCG tokens, themed components, an inventory site, behavioural + a11y tests, token lint rules and npm packaging — from a single machine-readable registry that AI agents can consume.",
+  "author": {
+    "name": "Staple Lab",
+    "url": "https://github.com/staple-lab"
+  },
+  "homepage": "https://github.com/staple-lab/design-system-skills",
+  "repository": "https://github.com/staple-lab/design-system-skills",
+  "license": "MIT",
+  "keywords": [
+    "design-system",
+    "design-tokens",
+    "dtcg",
+    "react",
+    "tailwind",
+    "base-ui",
+    "radix",
+    "react-aria",
+    "shadcn",
+    "accessibility",
+    "storybook",
+    "component-library",
+    "motion"
+  ]
+}

@@ -1,0 +1,124 @@
+/*
+ * The same Button, styled with CSS Modules instead of Tailwind.
+ *
+ * Kept alongside the Tailwind version deliberately: it is the proof that the token layer
+ * is the real system and the CSS system is swappable. Every value here is a token — no
+ * hex, no magic px — which is exactly what makes the swap possible.
+ *
+ * Use ONE of these per project (`stack.cssSystem` in design-system.config.json), not both.
+ */
+
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ds-control-gap);
+
+  height: var(--ds-control-height-md);
+  padding-inline: var(--ds-control-padding-x-md); /* logical properties → free RTL */
+  border: none;
+  border-radius: var(--ds-control-radius);
+
+  font-family: var(--ds-type-label-font-family);
+  font-size: var(--ds-type-label-font-size);
+  font-weight: var(--ds-type-label-font-weight);
+  line-height: var(--ds-type-label-line-height);
+  white-space: nowrap;
+  user-select: none;
+  cursor: pointer;
+
+  transition:
+    background-color var(--ds-duration-fast) var(--ds-easing-standard),
+    color var(--ds-duration-fast) var(--ds-easing-standard),
+    box-shadow var(--ds-duration-fast) var(--ds-easing-standard);
+}
+
+/* Extends the tap target to ≥44px without changing the visual bounds. */
+.button::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+}
+
+/* :focus-visible only — :focus fires on mouse click, and that is how focus styles get deleted. */
+.button:focus-visible {
+  outline: var(--ds-focus-ring-width) solid var(--ds-color-ring);
+  outline-offset: var(--ds-focus-ring-offset);
+}
+
+.button:disabled,
+.button[aria-disabled='true'] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* --- variants ------------------------------------------------------------ */
+
+.primary {
+  background: var(--ds-color-bg-accent);
+  color: var(--ds-color-fg-on-accent);
+}
+.primary:hover:not(:disabled) { background: var(--ds-color-bg-accent-hover); }
+.primary:active:not(:disabled) { background: var(--ds-color-bg-accent-active); }
+
+.secondary {
+  background: var(--ds-color-bg-subtle);
+  color: var(--ds-color-fg-default);
+}
+.secondary:hover:not(:disabled) { background: var(--ds-color-bg-subtle-hover); }
+.secondary:active:not(:disabled) { background: var(--ds-color-bg-subtle-active); }
+
+.ghost {
+  background: transparent;
+  color: var(--ds-color-fg-default);
+}
+.ghost:hover:not(:disabled) { background: var(--ds-color-bg-subtle); }
+
+.danger {
+  background: var(--ds-color-bg-danger);
+  color: var(--ds-color-fg-on-danger);
+}
+.danger:hover:not(:disabled) { background: var(--ds-color-bg-danger-hover); }
+
+/* --- sizes --------------------------------------------------------------- */
+
+.sm {
+  height: var(--ds-control-height-sm);
+  padding-inline: var(--ds-control-padding-x-sm);
+  font-size: var(--ds-type-body-sm-font-size);
+}
+.lg {
+  height: var(--ds-control-height-lg);
+  padding-inline: var(--ds-control-padding-x-lg);
+  font-size: var(--ds-type-body-font-size);
+}
+
+.fullWidth { width: 100%; }
+
+/* --- loading ------------------------------------------------------------- */
+
+/* Hidden, not removed — the button must not resize when the spinner appears. */
+.label { display: contents; }
+.button[data-loading] .label { visibility: hidden; }
+
+.spinner {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.spinner svg {
+  width: 1rem;
+  height: 1rem;
+  animation: spin var(--ds-duration-slower) linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Handled globally too, but a spinner is the one animation worth naming explicitly. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner svg { animation-duration: 2s; }
+}

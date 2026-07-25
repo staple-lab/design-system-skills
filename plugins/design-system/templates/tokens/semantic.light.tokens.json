@@ -1,0 +1,75 @@
+{
+  "$description": "SEMANTIC tier, light theme — what colours MEAN. This is the layer components consume. A theme reassigns these; it never redefines primitives, so `accent.600` means the same hex everywhere and every reference stays readable.",
+  "color": {
+    "$type": "color",
+    "bg": {
+      "default":       { "$value": "{color.neutral.50}",  "$description": "Page background" },
+      "surface":       { "$value": "{color.white}",       "$description": "Cards, panels, table rows" },
+      "raised":        { "$value": "{color.white}",       "$description": "Popovers, menus — pair with shadow.overlay" },
+      "sunken":        { "$value": "{color.neutral.100}", "$description": "Wells, code blocks, inset areas" },
+      "subtle":        { "$value": "{color.neutral.100}", "$description": "Ghost button rest, selected rows" },
+      "subtle-hover":  { "$value": "{color.neutral.200}" },
+      "subtle-active": { "$value": "{color.neutral.300}" },
+      "accent":        { "$value": "{color.accent.600}",  "$description": "Primary buttons, active nav, selected state" },
+      "accent-hover":  { "$value": "{color.accent.700}" },
+      "accent-active": { "$value": "{color.accent.800}" },
+      "accent-subtle": { "$value": "{color.accent.100}",  "$description": "Info banners, accent-tinted backgrounds" },
+      "success":       { "$value": "{color.success.700}" },
+      "success-subtle":{ "$value": "{color.success.100}" },
+      "warning":       { "$value": "{color.warning.500}" },
+      "warning-subtle":{ "$value": "{color.warning.100}" },
+      "danger":        { "$value": "{color.danger.600}" },
+      "danger-hover":  { "$value": "{color.danger.700}" },
+      "danger-subtle": { "$value": "{color.danger.100}" },
+      "disabled":      { "$value": "{color.neutral.200}" },
+      "overlay":       { "$value": "oklch(0.145 0.006 258 / 0.6)", "$description": "Scrim behind modals" }
+    },
+    "fg": {
+      "default":    { "$value": "{color.neutral.900}", "$description": "Primary text" },
+      "muted":      { "$value": "{color.neutral.600}", "$description": "Secondary text, descriptions. Clears AA on bg.default" },
+      "subtle":     { "$value": "{color.neutral.500}", "$description": "Decorative icons and dividers — NOT for text",
+                      "$extensions": { "design-system": { "contrast": { "min": 3 } } } },
+      "disabled":   { "$value": "{color.neutral.400}", "$description": "Disabled text. WCAG-exempt, but below ~2.5:1 it reads as broken rather than disabled",
+                      "$extensions": { "design-system": { "contrast": { "skip": true } } } },
+      "accent":     { "$value": "{color.accent.700}",  "$description": "Links and accent text on light surfaces" },
+      "success":    { "$value": "{color.success.800}" },
+      "warning":    { "$value": "{color.warning.800}" },
+      "danger":     { "$value": "{color.danger.700}" },
+      "on-accent":  { "$value": "{color.white}",       "$description": "Text on bg.accent — the pairing the contrast gate checks" },
+      "on-success": { "$value": "{color.white}" },
+      "on-warning": { "$value": "{color.neutral.1000}", "$description": "Amber peaks light: nothing on that ramp takes white text" },
+      "on-danger":  { "$value": "{color.white}" }
+    },
+    "border": {
+      "default": { "$value": "{color.neutral.300}" },
+      "subtle":  { "$value": "{color.neutral.200}", "$description": "Hairlines, table rules" },
+      "strong":  { "$value": "{color.neutral.400}", "$description": "Input borders — needs 3:1 to be perceivable" },
+      "accent":  { "$value": "{color.accent.600}" },
+      "danger":  { "$value": "{color.danger.600}" }
+    },
+    "ring": { "$value": "{color.accent.600}", "$description": "Focus ring. Needs 3:1 against BOTH the component and the page behind it" }
+  },
+
+  "shadow": {
+    "$type": "shadow",
+    "$description": "Each level is a PAIR — a tight contact shadow plus a diffuse ambient one. A single blurred shadow always reads as a sticker.",
+    "raised": {
+      "$value": [
+        { "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 1, "unit": "px" }, "blur": { "value": 2, "unit": "px" }, "spread": { "value": 0, "unit": "px" }, "color": "rgb(0 0 0 / 0.06)" },
+        { "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 1, "unit": "px" }, "blur": { "value": 3, "unit": "px" }, "spread": { "value": 0, "unit": "px" }, "color": "rgb(0 0 0 / 0.10)" }
+      ]
+    },
+    "overlay": {
+      "$value": [
+        { "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 4, "unit": "px" }, "blur": { "value": 8, "unit": "px" },  "spread": { "value": 0, "unit": "px" }, "color": "rgb(0 0 0 / 0.06)" },
+        { "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 8, "unit": "px" }, "blur": { "value": 24, "unit": "px" }, "spread": { "value": 0, "unit": "px" }, "color": "rgb(0 0 0 / 0.12)" }
+      ]
+    },
+    "modal": {
+      "$value": [
+        { "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 8, "unit": "px" },  "blur": { "value": 16, "unit": "px" }, "spread": { "value": 0, "unit": "px" }, "color": "rgb(0 0 0 / 0.08)" },
+        { "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 24, "unit": "px" }, "blur": { "value": 48, "unit": "px" }, "spread": { "value": 0, "unit": "px" }, "color": "rgb(0 0 0 / 0.16)" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,191 @@
+{
+  "$description": "PRIMITIVE tier — raw values and scales. Theme-independent. Components must NEVER reference these directly; that is what the semantic tier is for. Colours are authored in OKLCH so lightness is perceptual and one ramp recipe works across every hue.",
+  "color": {
+    "$type": "color",
+    "neutral": {
+      "$description": "The workhorse. Very slightly tinted toward the brand hue — a pure grey reads as 'default', a tinted one reads as 'chosen'.",
+      "50":   { "$value": "oklch(0.985 0.002 258)", "$description": "Page background, light theme" },
+      "100":  { "$value": "oklch(0.968 0.003 258)", "$description": "Subtle fill, hover on subtle" },
+      "200":  { "$value": "oklch(0.935 0.005 258)", "$description": "Subtle fill active, hairline borders" },
+      "300":  { "$value": "oklch(0.890 0.007 258)", "$description": "Default borders" },
+      "400":  { "$value": "oklch(0.790 0.010 258)", "$description": "Strong borders, disabled foreground" },
+      "500":  { "$value": "oklch(0.645 0.012 258)", "$description": "Decorative icons — below AA for body text" },
+      "600":  { "$value": "oklch(0.545 0.013 258)", "$description": "Secondary text. Clears 4.5:1 on neutral.50" },
+      "700":  { "$value": "oklch(0.470 0.013 258)" },
+      "800":  { "$value": "oklch(0.375 0.012 258)", "$description": "Surface, dark theme raised" },
+      "900":  { "$value": "oklch(0.285 0.010 258)", "$description": "Primary text, light theme" },
+      "950":  { "$value": "oklch(0.205 0.008 258)", "$description": "Surface, dark theme" },
+      "1000": { "$value": "oklch(0.145 0.006 258)", "$description": "Page background, dark theme" }
+    },
+    "accent": {
+      "$description": "Brand. Replace the hue (258) and re-run the build to rebrand the whole system.",
+      "50":   { "$value": "oklch(0.977 0.013 258)" },
+      "100":  { "$value": "oklch(0.955 0.026 258)" },
+      "200":  { "$value": "oklch(0.925 0.049 258)" },
+      "300":  { "$value": "oklch(0.883 0.075 258)" },
+      "400":  { "$value": "oklch(0.820 0.113 258)" },
+      "500":  { "$value": "oklch(0.720 0.155 258)" },
+      "600":  { "$value": "oklch(0.565 0.185 258)", "$description": "THE brand step — solid fills, primary buttons. Tuned so white text clears 4.5:1 on it" },
+      "700":  { "$value": "oklch(0.500 0.180 258)", "$description": "Solid hover; link text on light backgrounds" },
+      "800":  { "$value": "oklch(0.445 0.160 258)", "$description": "Solid active/pressed" },
+      "900":  { "$value": "oklch(0.400 0.135 258)" },
+      "950":  { "$value": "oklch(0.290 0.095 258)" },
+      "1000": { "$value": "oklch(0.190 0.060 258)" }
+    },
+    "success": {
+      "50":   { "$value": "oklch(0.975 0.015 152)" },
+      "100":  { "$value": "oklch(0.950 0.032 152)" },
+      "200":  { "$value": "oklch(0.910 0.058 152)" },
+      "300":  { "$value": "oklch(0.860 0.085 152)" },
+      "400":  { "$value": "oklch(0.780 0.115 152)" },
+      "500":  { "$value": "oklch(0.680 0.140 152)" },
+      "600":  { "$value": "oklch(0.580 0.145 152)" },
+      "700":  { "$value": "oklch(0.480 0.125 152)", "$description": "Solid fill — green peaks light, so the fill step is darker than accent's" },
+      "800":  { "$value": "oklch(0.420 0.105 152)" },
+      "900":  { "$value": "oklch(0.350 0.085 152)" },
+      "950":  { "$value": "oklch(0.260 0.060 152)" },
+      "1000": { "$value": "oklch(0.175 0.040 152)" }
+    },
+    "warning": {
+      "50":   { "$value": "oklch(0.980 0.018 75)" },
+      "100":  { "$value": "oklch(0.960 0.040 75)" },
+      "200":  { "$value": "oklch(0.925 0.075 75)" },
+      "300":  { "$value": "oklch(0.885 0.110 75)" },
+      "400":  { "$value": "oklch(0.835 0.140 75)" },
+      "500":  { "$value": "oklch(0.780 0.155 75)", "$description": "Amber peaks very light — nothing on this ramp takes white text" },
+      "600":  { "$value": "oklch(0.700 0.150 75)" },
+      "700":  { "$value": "oklch(0.590 0.125 75)" },
+      "800":  { "$value": "oklch(0.480 0.100 75)" },
+      "900":  { "$value": "oklch(0.390 0.080 75)" },
+      "950":  { "$value": "oklch(0.285 0.058 75)" },
+      "1000": { "$value": "oklch(0.190 0.040 75)" }
+    },
+    "danger": {
+      "50":   { "$value": "oklch(0.975 0.012 25)" },
+      "100":  { "$value": "oklch(0.952 0.028 25)" },
+      "200":  { "$value": "oklch(0.920 0.055 25)" },
+      "300":  { "$value": "oklch(0.875 0.085 25)" },
+      "400":  { "$value": "oklch(0.800 0.130 25)" },
+      "500":  { "$value": "oklch(0.700 0.180 25)" },
+      "600":  { "$value": "oklch(0.580 0.200 25)", "$description": "Solid fill — tuned for white text at 4.5:1" },
+      "700":  { "$value": "oklch(0.510 0.190 25)" },
+      "800":  { "$value": "oklch(0.450 0.165 25)" },
+      "900":  { "$value": "oklch(0.385 0.135 25)" },
+      "950":  { "$value": "oklch(0.280 0.095 25)" },
+      "1000": { "$value": "oklch(0.185 0.060 25)" }
+    },
+    "white": { "$value": "oklch(1 0 0)" },
+    "black": { "$value": "oklch(0 0 0)" },
+    "transparent": { "$value": "transparent" }
+  },
+
+  "space": {
+    "$type": "dimension",
+    "$description": "4px base grid. The missing rungs (7, 9, 11) are deliberate — a gap in a scale is what stops people fine-tuning their way out of the system.",
+    "0":  { "$value": { "value": 0,  "unit": "px" } },
+    "1":  { "$value": { "value": 4,  "unit": "px" }, "$description": "Icon-to-label gaps" },
+    "2":  { "$value": { "value": 8,  "unit": "px" }, "$description": "Inside small controls" },
+    "3":  { "$value": { "value": 12, "unit": "px" }, "$description": "Vertical padding inside inputs and buttons" },
+    "4":  { "$value": { "value": 16, "unit": "px" }, "$description": "The default gap" },
+    "5":  { "$value": { "value": 20, "unit": "px" } },
+    "6":  { "$value": { "value": 24, "unit": "px" }, "$description": "Comfortable card / section padding" },
+    "8":  { "$value": { "value": 32, "unit": "px" }, "$description": "Between related sections" },
+    "10": { "$value": { "value": 40, "unit": "px" } },
+    "12": { "$value": { "value": 48, "unit": "px" }, "$description": "Between unrelated sections" },
+    "16": { "$value": { "value": 64, "unit": "px" }, "$description": "Page rhythm" },
+    "20": { "$value": { "value": 80, "unit": "px" } },
+    "24": { "$value": { "value": 96, "unit": "px" }, "$description": "Hero / marketing rhythm" }
+  },
+
+  "radius": {
+    "$type": "dimension",
+    "$description": "Nested radii must differ: inner = outer − padding, or the curves look wrong.",
+    "none": { "$value": { "value": 0,    "unit": "px" } },
+    "sm":   { "$value": { "value": 4,    "unit": "px" } },
+    "md":   { "$value": { "value": 8,    "unit": "px" }, "$description": "Default — buttons, inputs" },
+    "lg":   { "$value": { "value": 12,   "unit": "px" }, "$description": "Cards, popovers" },
+    "xl":   { "$value": { "value": 16,   "unit": "px" }, "$description": "Modals, large surfaces" },
+    "full": { "$value": { "value": 9999, "unit": "px" }, "$description": "Pills, avatars" }
+  },
+
+  "font": {
+    "family": {
+      "$type": "fontFamily",
+      "sans": { "$value": ["Inter var", "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"] },
+      "mono": { "$value": ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"] }
+    },
+    "weight": {
+      "$type": "fontWeight",
+      "regular":  { "$value": 400 },
+      "medium":   { "$value": 500 },
+      "semibold": { "$value": 600 },
+      "bold":     { "$value": 700 }
+    }
+  },
+
+  "type": {
+    "$type": "typography",
+    "$description": "Named by ROLE, never by size — a token called `text.24` gets picked because it is 24px, which is exactly the coupling tokens exist to break. Each is a full set: size + line-height + weight + tracking.",
+    "display": {
+      "$value": { "fontSize": "clamp(2.5rem, 2rem + 2.5vw, 3rem)", "lineHeight": 1.05, "fontWeight": "{font.weight.bold}", "letterSpacing": { "value": -0.02, "unit": "em" }, "fontFamily": "{font.family.sans}" }
+    },
+    "heading-1": {
+      "$value": { "fontSize": { "value": 40, "unit": "px" }, "lineHeight": 1.1, "fontWeight": "{font.weight.semibold}", "letterSpacing": { "value": -0.02, "unit": "em" }, "fontFamily": "{font.family.sans}" }
+    },
+    "heading-2": {
+      "$value": { "fontSize": { "value": 33, "unit": "px" }, "lineHeight": 1.15, "fontWeight": "{font.weight.semibold}", "letterSpacing": { "value": -0.02, "unit": "em" }, "fontFamily": "{font.family.sans}" }
+    },
+    "heading-3": {
+      "$value": { "fontSize": { "value": 23, "unit": "px" }, "lineHeight": 1.25, "fontWeight": "{font.weight.semibold}", "letterSpacing": { "value": -0.01, "unit": "em" }, "fontFamily": "{font.family.sans}" }
+    },
+    "body-lg": {
+      "$value": { "fontSize": { "value": 19, "unit": "px" }, "lineHeight": 1.55, "fontWeight": "{font.weight.regular}", "letterSpacing": { "value": 0, "unit": "em" }, "fontFamily": "{font.family.sans}" }
+    },
+    "body": {
+      "$value": { "fontSize": { "value": 16, "unit": "px" }, "lineHeight": 1.55, "fontWeight": "{font.weight.regular}", "letterSpacing": { "value": 0, "unit": "em" }, "fontFamily": "{font.family.sans}" }
+    },
+    "body-sm": {
+      "$value": { "fontSize": { "value": 14, "unit": "px" }, "lineHeight": 1.5, "fontWeight": "{font.weight.regular}", "letterSpacing": { "value": 0, "unit": "em" }, "fontFamily": "{font.family.sans}" }
+    },
+    "label": {
+      "$value": { "fontSize": { "value": 14, "unit": "px" }, "lineHeight": 1.4, "fontWeight": "{font.weight.medium}", "letterSpacing": { "value": 0, "unit": "em" }, "fontFamily": "{font.family.sans}" }
+    },
+    "caption": {
+      "$value": { "fontSize": { "value": 12, "unit": "px" }, "lineHeight": 1.4, "fontWeight": "{font.weight.regular}", "letterSpacing": { "value": 0.01, "unit": "em" }, "fontFamily": "{font.family.sans}" }
+    },
+    "code": {
+      "$value": { "fontSize": { "value": 14, "unit": "px" }, "lineHeight": 1.5, "fontWeight": "{font.weight.regular}", "letterSpacing": { "value": 0, "unit": "em" }, "fontFamily": "{font.family.mono}" }
+    }
+  },
+
+  "duration": {
+    "$type": "duration",
+    "$description": "Exits run ~0.8× the entrance: a user who dismissed something has already moved on. Anything above 400ms feels broken unless the user asked for it.",
+    "instant": { "$value": { "value": 50,  "unit": "ms" } },
+    "fast":    { "$value": { "value": 150, "unit": "ms" }, "$description": "Hover, focus, small state change" },
+    "normal":  { "$value": { "value": 250, "unit": "ms" }, "$description": "The default — dropdowns, tooltips, accordions" },
+    "slow":    { "$value": { "value": 400, "unit": "ms" }, "$description": "Modals, drawers" },
+    "slower":  { "$value": { "value": 600, "unit": "ms" }, "$description": "Choreographed sequences only" }
+  },
+
+  "easing": {
+    "$type": "cubicBezier",
+    "standard":   { "$value": [0.2, 0, 0, 1] },
+    "emphasized": { "$value": [0.05, 0.7, 0.1, 1], "$description": "Entering, attention-drawing" },
+    "decelerate": { "$value": [0, 0, 0, 1],       "$description": "Entering the screen" },
+    "accelerate": { "$value": [0.3, 0, 1, 1],     "$description": "Leaving the screen" }
+  },
+
+  "z": {
+    "$type": "number",
+    "$description": "Gaps of 100 leave room to insert without renumbering. A z-index of 9999 in the codebase is a bug report waiting to happen.",
+    "base":     { "$value": 0 },
+    "dropdown": { "$value": 1000 },
+    "sticky":   { "$value": 1100 },
+    "overlay":  { "$value": 1200 },
+    "modal":    { "$value": 1300 },
+    "popover":  { "$value": 1400 },
+    "toast":    { "$value": 1500 },
+    "tooltip":  { "$value": 1600 }
+  }
+}

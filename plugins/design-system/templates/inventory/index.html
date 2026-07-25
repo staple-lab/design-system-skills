@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Design system inventory</title>
+    <script>
+      // Applied before first paint so the page never flashes the wrong theme.
+      // The attribute lives on <html> because portalled content (menus, dialogs, tooltips)
+      // renders at the document root and would otherwise miss it.
+      (() => {
+        const stored = localStorage.getItem('ds-theme');
+        const theme = stored ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

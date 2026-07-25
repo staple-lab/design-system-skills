@@ -1,0 +1,94 @@
+{
+  "$schema": "./design-system.schema.json",
+  "$comment": "THE BRIEF. Written by /design-system:init from the interview; read by every other command, by the token build, by the lint rules and by the inventory site. Record the WHY in each rationale field — in two years someone will ask why the team is on this stack and the answer should be in the repo, not in a Slack thread.",
+
+  "name": "acme-ui",
+  "displayName": "Acme Design System",
+  "version": "0.1.0",
+
+  "stack": {
+    "framework": "react",
+    "primitives": "base-ui",
+    "componentLayer": "own",
+    "cssSystem": "tailwind",
+    "motion": "motion",
+    "rationale": {
+      "primitives": "Base UI 1.x — actively maintained, render-prop composition, and the default the shadcn CLI now targets.",
+      "componentLayer": "Own the code. Brand consistency is the reason this system exists, so a vendor's visual opinions are a cost, not a saving.",
+      "cssSystem": "Tailwind v4 — @theme makes every token a CSS custom property, which is the shortest path from the DTCG source to something components can use.",
+      "motion": "Motion — this is product UI, not a brand site; AnimatePresence covers the exit animations CSS cannot."
+    }
+  },
+
+  "paths": {
+    "root": "src/design-system",
+    "tokens": "tokens",
+    "components": "src/design-system/components",
+    "registry": ".design-system/registry.json",
+    "inventory": "inventory"
+  },
+
+  "tokens": {
+    "prefix": "ds",
+    "themes": ["light", "dark"],
+    "defaultTheme": "light",
+    "darkTheme": "dark",
+    "brands": [],
+    "contrast": {
+      "level": "AA",
+      "enforce": true,
+      "$comment": "enforce:true makes a failing pair fail the BUILD. Contrast as a CI gate rather than a review comment is the highest-leverage accessibility decision available — it makes the failure impossible to merge rather than easy to miss."
+    },
+    "density": ["comfortable", "compact"]
+  },
+
+  "typography": {
+    "source": "google-fonts",
+    "sans": "Inter",
+    "mono": "JetBrains Mono",
+    "scale": 1.2,
+    "$comment": "1.200 (minor third) is the safe default for product UI. 1.333+ is editorial."
+  },
+
+  "distribution": {
+    "mode": "in-repo",
+    "packageName": "@acme/ui",
+    "registryUrl": null,
+    "$comment": "mode: in-repo | workspace | private-npm | public-npm. In-repo is right for a single app — a package adds a version boundary and a lag between change and use. It earns its keep at 2+ consumers."
+  },
+
+  "conventions": {
+    "polymorphism": "render",
+    "$comment2": "render (Base UI) | asChild (Radix) | as. Pick ONE — mixed conventions are the most common cause of 'why does this component not compose'.",
+    "variantProp": "variant",
+    "sizeProp": "size",
+    "stateAttributes": "data-*",
+    "classNamePassthrough": true,
+    "namingCase": "PascalCase",
+    "compoundParts": true
+  },
+
+  "quality": {
+    "testRunner": "vitest",
+    "a11y": { "axe": true, "keyboardTests": true, "level": "AA" },
+    "visualRegression": "playwright",
+    "coverageFloor": 80,
+    "lint": {
+      "tokenEnforcement": "error",
+      "importBoundaries": "error",
+      "jsxA11y": "error"
+    }
+  },
+
+  "inventory": {
+    "enabled": true,
+    "showTestStatus": true,
+    "showAdoption": true,
+    "lifecycleStages": ["draft", "beta", "stable", "deprecated"]
+  },
+
+  "ai": {
+    "generateAgentsMd": true,
+    "$comment": "Emits AGENTS.md from the registry so coding agents get the same single source of truth the docs site renders. Without it, agents invent component names and hardcode hexes."
+  }
+}
