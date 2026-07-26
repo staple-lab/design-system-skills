@@ -7,9 +7,20 @@
  * if you need its plugin ecosystem or a Figma round-trip via Tokens Studio.
  *
  *   tokens/
- *     primitive.tokens.json          theme-independent raw values
- *     semantic.<theme>.tokens.json   one file per theme, same paths in each
- *     component.tokens.json          per-component knobs (resolved per theme)
+ *     primitive.tokens.json            theme-independent raw values
+ *     semantic.<theme>.tokens.json     one file per theme, same paths in each
+ *     component.tokens.json            per-component knobs (resolved per theme)
+ *     density.<name>.tokens.json       optional — theme-independent re-values of existing
+ *                                      tokens, emitted as a [data-density='<name>'] block
+ *     brand.<name>.tokens.json         optional — a brand's primitive palette, applied to
+ *                                      every theme; emitted as [data-brand='<name>'] blocks
+ *     brand.<name>.<theme>.tokens.json optional — brand semantic re-points for ONE theme
+ *                                      (needed when the brand hue's contrast behaviour
+ *                                      differs from the default's — see scales.md)
+ *
+ * The default density and the default brand are the plain document: no file, no attribute.
+ * Brand spaces run through the same contrast gate as the base themes — a brand that fails
+ * AA fails the build.
  *
  * Outputs land in tokens/dist/. Commit them: the diff is the visual review, and
  * package consumers should not need to run this build.
@@ -83,13 +94,28 @@ function loadTokenFiles() {
   const base = new Map();
   const themes = new Map(); // theme -> Map
   const componentFiles = [];
+  const densities = new Map(); // density name -> Map of overrides
+  const brands = new Map(); // brand name -> { shared: Map|null, themes: Map<theme, Map> }
 
   for (const file of files) {
     const json = JSON.parse(readFileSync(join(SRC, file), 'utf8'));
     const name = basename(file, '.tokens.json');
     const themeMatch = /^semantic\.(.+)$/.exec(name);
+    const densityMatch = /^density\.(.+)$/.exec(name);
+    const brandMatch = /^brand\.(.+)$/.exec(name);
     if (themeMatch) {
       themes.set(themeMatch[1], flatten(json));
+    } else if (densityMatch) {
+      if (densityMatch[1].includes('.')) die(`Density files are density.<name>.tokens.json (one segment) — got ${file}`);
+      densities.set(densityMatch[1], flatten(json));
+    } else if (brandMatch) {
+      const parts = brandMatch[1].split('.');
+      if (parts.length > 2) die(`Brand files are brand.<name>.tokens.json or brand.<name>.<theme>.tokens.json — got ${file}`);
+      const [bname, btheme] = parts;
+      const entry = brands.get(bname) ?? { shared: null, themes: new Map() };
+      if (btheme) entry.themes.set(btheme, flatten(json));
+      else entry.shared = flatten(json);
+      brands.set(bname, entry);
     } else if (name.startsWith('component')) {
       componentFiles.push(flatten(json));
     } else {
@@ -98,7 +124,7 @@ function loadTokenFiles() {
   }
 
   if (!themes.size) die('No semantic.<theme>.tokens.json files found — a system needs at least one theme.');
-  return { base, themes, component: componentFiles };
+  return { base, themes, component: componentFiles, densities, brands };
 }
 
 // ---------------------------------------------------------------------------
@@ -349,7 +375,16 @@ function checkContrast(themeName, resolved) {
 // emitters
 // ---------------------------------------------------------------------------
 
-function emitCss(themeVars, themeNames) {
+/** Vars in `next` that are new or changed relative to `prev`. Overlays only add, never remove. */
+function diffVars(prev, next) {
+  const d = new Map();
+  for (const [name, value] of next) {
+    if (prev.get(name) !== value) d.set(name, value);
+  }
+  return d;
+}
+
+function emitCss(themeVars, themeNames, densityVars = new Map(), brandVars = new Map()) {
   const [first] = themeNames;
   // Anything identical across every theme belongs in :root once, not repeated per theme.
   const shared = new Map();
@@ -393,6 +428,38 @@ function emitCss(themeVars, themeNames) {
         .map(([n, v]) => `    ${n}: ${v};`)
         .join('\n')}\n  }\n}\n`;
   }
+
+  // Brand blocks. [data-brand] alone carries the default theme's brand values; because it
+  // sits later in the file than [data-theme='<t>'] at equal specificity, every themed brand
+  // block must re-state the union of touched vars or the default-theme brand values would
+  // bleed into other themes.
+  for (const [bname, perBrandTheme] of brandVars) {
+    const dfltDiff = diffVars(themeVars.get(dflt), perBrandTheme.get(dflt));
+    css += '\n' + block(`[data-brand='${bname}']`, dfltDiff, `brand: ${bname} — theme: ${dflt} (default)`);
+    for (const t of themeNames.filter((t) => t !== dflt)) {
+      const tDiff = diffVars(themeVars.get(t), perBrandTheme.get(t));
+      const names = new Set([...dfltDiff.keys(), ...tDiff.keys()]);
+      const merged = new Map(
+        [...names].map((n) => [n, perBrandTheme.get(t).get(n) ?? themeVars.get(t).get(n)]),
+      );
+      css += '\n' + block(`[data-brand='${bname}'][data-theme='${t}']`, merged, `brand: ${bname} — theme: ${t}`);
+      if (t === dark && merged.size) {
+        css +=
+          `\n/* brand: ${bname} — OS dark preference, only while no explicit choice has been made */\n` +
+          `@media (prefers-color-scheme: dark) {\n` +
+          `  [data-brand='${bname}']:not([data-theme]) {\n${[...merged]
+            .map(([n, v]) => `    ${n}: ${v};`)
+            .join('\n')}\n  }\n}\n`;
+      }
+    }
+  }
+
+  // Density blocks last: density re-values dimensions that live in the shared :root block,
+  // and equal specificity + later position is what makes [data-density] win.
+  for (const [dname, diff] of densityVars) {
+    css += '\n' + block(`[data-density='${dname}']`, diff, `density: ${dname}`);
+  }
+
   return css;
 }
 
@@ -421,7 +488,7 @@ export type ThemeName = (typeof themes)[number];
 }
 
 /** The flat map is what the inventory site and AI agents read, so composite parts get their own entries. */
-function emitJson(resolvedByTheme, flatByTheme, themeNames, contrastReport) {
+function emitJson(resolvedByTheme, flatByTheme, themeNames, contrastReport, modes = {}) {
   const themes = {};
   for (const t of themeNames) {
     const resolved = resolvedByTheme.get(t);
@@ -444,7 +511,17 @@ function emitJson(resolvedByTheme, flatByTheme, themeNames, contrastReport) {
     }
     themes[t] = out;
   }
-  return JSON.stringify({ generated: 'tokens/build.mjs', themes, contrast: contrastReport }, null, 2);
+  return JSON.stringify(
+    {
+      generated: 'tokens/build.mjs',
+      themes,
+      densities: modes.densities ?? [],
+      brands: modes.brands ?? [],
+      contrast: contrastReport,
+    },
+    null,
+    2,
+  );
 }
 
 function subType(path) {
@@ -459,8 +536,8 @@ function tier(path, token) {
   if (token.extensions?.tier) return token.extensions.tier;
   const [head] = path.split('.');
   if (path.startsWith('color.') && /^color\.(bg|fg|border|ring|shadow)\./.test(path)) return 'semantic';
-  if (['space', 'radius', 'shadow', 'duration', 'easing', 'z', 'type', 'font'].includes(head)) return 'semantic';
-  if (path.split('.').length > 1 && !['color', 'space', 'radius', 'shadow', 'duration', 'easing', 'z', 'type', 'font'].includes(head))
+  if (['space', 'radius', 'border-width', 'opacity', 'shadow', 'duration', 'easing', 'z', 'type', 'font'].includes(head)) return 'semantic';
+  if (path.split('.').length > 1 && !['color', 'space', 'radius', 'border-width', 'opacity', 'shadow', 'duration', 'easing', 'z', 'type', 'font'].includes(head))
     return 'component';
   return 'primitive';
 }
@@ -589,25 +666,21 @@ function die(msg) {
 }
 
 function main() {
-  const { base, themes, component } = loadTokenFiles();
+  const { base, themes, component, densities, brands } = loadTokenFiles();
   const themeNames = [...themes.keys()].sort((a, b) =>
     a === config.defaultTheme ? -1 : b === config.defaultTheme ? 1 : a.localeCompare(b),
   );
 
-  const resolvedByTheme = new Map();
-  const themeVars = new Map(); // theme -> Map<cssVarName, value>
-  const flatByTheme = new Map(); // theme -> Map<tokenPath, value>, composites already expanded
-  const contrastReport = [];
-  let failures = [];
-
-  for (const theme of themeNames) {
+  /** base ← semantic.<theme> ← component ← overlays (brand / density modes layer on the assembled default). */
+  const buildSpace = (theme, overlays = []) => {
     const space = new Map(base);
     for (const [k, v] of themes.get(theme)) space.set(k, v);
     for (const file of component) for (const [k, v] of file) space.set(k, v);
+    for (const o of overlays) for (const [k, v] of o) space.set(k, v);
+    return space;
+  };
 
-    const resolved = resolveAll(space);
-    resolvedByTheme.set(theme, resolved);
-
+  const toVars = (resolved) => {
     const vars = new Map();
     const flat = new Map();
     for (const [, tk] of resolved) {
@@ -616,12 +689,94 @@ function main() {
         flat.set(path, value);
       }
     }
+    return { vars, flat };
+  };
+
+  const resolvedByTheme = new Map();
+  const themeVars = new Map(); // theme -> Map<cssVarName, value>
+  const flatByTheme = new Map(); // theme -> Map<tokenPath, value>, composites already expanded
+  const contrastReport = [];
+  let failures = [];
+
+  for (const theme of themeNames) {
+    const resolved = resolveAll(buildSpace(theme));
+    resolvedByTheme.set(theme, resolved);
+
+    const { vars, flat } = toVars(resolved);
     themeVars.set(theme, vars);
     flatByTheme.set(theme, flat);
 
     const r = checkContrast(theme, resolved);
     failures = failures.concat(r.failures);
     contrastReport.push(...r.checked);
+  }
+
+  // Densities: re-value existing tokens only, and identically in every theme. A colour that
+  // shifts with density would need per-theme handling nothing downstream expects.
+  const densityVars = new Map(); // density -> Map<cssVarName, value> (only the changed vars)
+  const knownPaths = new Set(buildSpace(themeNames[0]).keys());
+  for (const [dname, overrides] of densities) {
+    for (const path of overrides.keys()) {
+      if (!knownPaths.has(path))
+        die(
+          `density.${dname} re-values unknown token "${path}" — density files may only override existing tokens\n` +
+            `  (a new token here would only exist under [data-density='${dname}'] and break everywhere else)`,
+        );
+    }
+    let diff = null;
+    for (const theme of themeNames) {
+      const { vars } = toVars(resolveAll(buildSpace(theme, [overrides])));
+      const d = diffVars(themeVars.get(theme), vars);
+      if (!diff) diff = d;
+      else if (diff.size !== d.size || [...diff].some(([k, v]) => d.get(k) !== v))
+        die(
+          `density.${dname} resolves to different values in different themes — density overrides must be\n` +
+            `  theme-independent (dimensions and numbers, never colours)`,
+        );
+    }
+    densityVars.set(dname, diff);
+  }
+
+  // Brands: a full token space per (brand, theme), so references re-resolve against the
+  // brand's primitives and the contrast gate runs on what will actually render.
+  const brandVars = new Map(); // brand -> Map<theme, full varsMap>
+  for (const [bname, entry] of brands) {
+    for (const t of entry.themes.keys()) {
+      if (!themes.has(t))
+        die(`brand.${bname}.${t}.tokens.json names unknown theme "${t}" — themes present: ${themeNames.join(', ')}`);
+    }
+    if (entry.themes.size && entry.themes.size < themeNames.length) {
+      const missing = themeNames.filter((t) => !entry.themes.has(t));
+      console.warn(
+        `⚠ brand "${bname}" has theme file(s) for ${[...entry.themes.keys()].join(', ')} but not ${missing.join(
+          ', ',
+        )} — missing themes keep the base semantics`,
+      );
+    }
+    const perTheme = new Map();
+    for (const theme of themeNames) {
+      const overlays = [entry.shared, entry.themes.get(theme)].filter(Boolean);
+      if (!overlays.length) {
+        perTheme.set(theme, themeVars.get(theme));
+        continue;
+      }
+      const resolved = resolveAll(buildSpace(theme, overlays));
+      const r = checkContrast(`${bname}/${theme}`, resolved);
+      failures = failures.concat(r.failures);
+      contrastReport.push(...r.checked);
+      perTheme.set(theme, toVars(resolved).vars);
+    }
+    brandVars.set(bname, perTheme);
+  }
+
+  // The config is the brief; the files are the implementation. Flag declared modes with no file.
+  for (const d of (config.density ?? []).slice(1)) {
+    if (!densities.has(d))
+      console.warn(`⚠ config declares density "${d}" but tokens/density.${d}.tokens.json does not exist — [data-density='${d}'] will change nothing`);
+  }
+  for (const b of config.brands ?? []) {
+    if (!brandVars.has(b))
+      console.warn(`⚠ config declares brand "${b}" but no brand.${b}[.<theme>].tokens.json exists — [data-brand='${b}'] will render the default brand`);
   }
 
   mkdirSync(OUT, { recursive: true });
@@ -631,9 +786,15 @@ function main() {
     written.push(name);
   };
 
-  write('tokens.css', emitCss(themeVars, themeNames));
+  write('tokens.css', emitCss(themeVars, themeNames, densityVars, brandVars));
   write('tokens.ts', emitTs(flatByTheme, themeNames));
-  write('tokens.json', emitJson(resolvedByTheme, flatByTheme, themeNames, contrastReport));
+  write(
+    'tokens.json',
+    emitJson(resolvedByTheme, flatByTheme, themeNames, contrastReport, {
+      densities: [...densityVars.keys()],
+      brands: [...brandVars.keys()],
+    }),
+  );
 
   switch (config.cssSystem) {
     case 'tailwind':
@@ -654,6 +815,10 @@ function main() {
 
   const total = themeVars.get(themeNames[0]).size;
   console.log(`✓ ${total} tokens × ${themeNames.length} theme(s): ${themeNames.join(', ')}`);
+  if (densityVars.size)
+    console.log(`  density: ${[...densityVars].map(([n, d]) => `${n} (${d.size} vars)`).join(', ')}`);
+  if (brandVars.size)
+    console.log(`  brands: ${[...brandVars.keys()].join(', ')} (contrast-gated per theme)`);
   console.log(`  → tokens/dist/{${written.join(', ')}}`);
   console.log(`  contrast: ${contrastReport.filter((c) => c.pass).length}/${contrastReport.length} pairs pass`);
 

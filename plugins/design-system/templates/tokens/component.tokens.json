@@ -19,7 +19,7 @@
   },
   "focus": {
     "$type": "dimension",
-    "ring-width":  { "$value": { "value": 2, "unit": "px" } },
+    "ring-width":  { "$value": "{border-width.md}" },
     "ring-offset": { "$value": { "value": 2, "unit": "px" }, "$description": "The offset is what makes one ring work on any background" }
   },
   "card": {

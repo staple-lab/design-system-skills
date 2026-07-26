@@ -2,8 +2,8 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "design-system",
   "displayName": "Design System Builder",
-  "version": "0.1.0",
-  "description": "Build and maintain a production React design system. Interviews you for your primitive layer, component layer, CSS system, colour, typography and motion library, then scaffolds DTCG tokens, themed components, an inventory site, behavioural + a11y tests, token lint rules and npm packaging — from a single machine-readable registry that AI agents can consume.",
+  "version": "0.2.0",
+  "description": "Build and maintain a production React design system. Interviews you for your primitive layer, component layer, CSS system, colour, typography and motion library, then scaffolds DTCG tokens (light/dark, density, multi-brand), components on a wave-based roadmap (including an icon system and layout primitives), an inventory site with authored pattern/content guidance, behavioural + a11y + visual-regression tests, token lint rules, codemods, governance scaffolds and npm packaging — from a single machine-readable registry served to AI agents as AGENTS.md, llms.txt and an MCP server.",
   "author": {
     "name": "Staple Lab",
     "url": "https://github.com/staple-lab"

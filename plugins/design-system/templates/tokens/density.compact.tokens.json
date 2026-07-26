@@ -1,0 +1,24 @@
+{
+  "$description": "DENSITY overrides — compact. Merged over base + theme + component and emitted as a [data-density=\"compact\"] block in tokens.css, so it may only re-value tokens that already exist, and only with theme-independent values (dimensions/numbers — the build rejects anything that resolves differently per theme). The targets are the component-tier knobs, NOT the primitive space scale: re-valuing space.4 under compact would tighten hero rhythm and marketing pages along with the tables, and make every `space.4 = 16px` description a lie. Comfortable is the plain document — no file, no attribute.",
+  "control": {
+    "height": {
+      "$type": "dimension",
+      "sm": { "$value": { "value": 28, "unit": "px" } },
+      "md": { "$value": { "value": 32, "unit": "px" }, "$description": "32px loses the 44px touch target even counting the focus ring — compact is for pointer-first data UIs, never touch" },
+      "lg": { "$value": { "value": 40, "unit": "px" } }
+    },
+    "padding-x": {
+      "$type": "dimension",
+      "sm": { "$value": "{space.2}" },
+      "md": { "$value": "{space.3}" },
+      "lg": { "$value": "{space.4}" }
+    },
+    "gap": { "$type": "dimension", "$value": "{space.1}" }
+  },
+  "card": {
+    "padding": { "$type": "dimension", "$value": "{space.4}" }
+  },
+  "dialog": {
+    "padding": { "$type": "dimension", "$value": "{space.5}" }
+  }
+}

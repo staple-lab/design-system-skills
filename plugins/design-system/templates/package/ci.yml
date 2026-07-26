@@ -67,6 +67,10 @@ jobs:
           name: inventory
           path: inventory/dist
 
+  # Baselines are platform-specific (Linux font rasterisation ≠ macOS). Bootstrap them
+  # from CI itself: let the first run fail, download the vrt-diffs artifact, commit the
+  # "actual" images as baselines. Regenerating locally on a Mac produces baselines this
+  # job can never match.
   visual:
     runs-on: ubuntu-latest
     steps:

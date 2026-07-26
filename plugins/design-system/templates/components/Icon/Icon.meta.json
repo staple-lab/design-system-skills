@@ -1,0 +1,91 @@
+{
+  "$comment": "The judgement calls — everything that cannot be extracted from code. Props, tokens, tests and adoption are generated; this file holds what a human decided.",
+
+  "status": "stable",
+  "since": "0.1.0",
+  "category": "Data display",
+  "summary": "Renders any SVG icon component at a system size, decorative by default.",
+  "description": "Icon wraps an SVG icon component — lucide-react is the recommended source, but anything that renders an <svg> and accepts SVG props works. It owns the two things every call site otherwise gets wrong: sizing (an em-based scale that tracks the surrounding text) and semantics (aria-hidden unless a label makes it meaningful). Colour is inherited from the text via the icon set's own currentColor.",
+
+  "synonyms": ["svg", "glyph", "pictogram", "lucide", "symbol"],
+
+  "useFor": [
+    "Reinforcing adjacent text: a save icon next to 'Save changes'",
+    "Meaning-carrying glyphs with a `label`: a status dot in a table cell with no text",
+    "Consistent sizing of mixed icon sources so they line up on one row"
+  ],
+  "dontUseFor": [
+    "Icon-only actions — use Button with a required aria-label; an Icon is not interactive and has no focus or hit-target handling",
+    "Illustrations and logos — those are images with fixed art direction; use <img> with alt text",
+    "Loading state — use the component's own `loading` prop (Button, etc.), which also announces via aria-busy"
+  ],
+
+  "keyboard": [],
+
+  "a11y": {
+    "role": "none (decorative) or img (labelled)",
+    "provides": [
+      "aria-hidden by default, so purely decorative icons are silent instead of announced as 'image'",
+      "role=\"img\" + aria-label set together by the `label` prop, so a meaningful icon is always named",
+      "The broken states are unrepresentable: aria-hidden, aria-label and role are removed from the prop types, so a role with no name or a name on a hidden node cannot compile",
+      "focusable=\"false\", so legacy engines never put the svg in the tab order"
+    ],
+    "consumerMustProvide": [
+      "A `label` whenever the icon is the only carrier of meaning — decorative-by-default means an unlabelled status icon says nothing to a screen reader",
+      "Labels that name the MEANING ('Delivery failed'), not the glyph ('red triangle')"
+    ],
+    "limitations": [
+      "Icon renders one glyph; it does not manage tooltips. A meaning-carrying icon usually needs a visible affordance for sighted users too — `label` fixes the screen reader, not the squint."
+    ]
+  },
+
+  "doDont": [
+    {
+      "do": "Let a decorative icon stay silent: <Icon icon={Check} /> next to the text 'Saved'",
+      "dont": "Label an icon whose meaning the adjacent text already states",
+      "why": "A labelled icon beside equivalent text makes screen readers announce everything twice — 'Saved, Saved'. Decorative is the correct default, which is why it IS the default."
+    },
+    {
+      "do": "Name the meaning when the icon stands alone: <Icon icon={AlertTriangle} label=\"Delivery failed\" />",
+      "dont": "Ship a bare <Icon icon={AlertTriangle} /> as the only failure indicator in a table cell",
+      "why": "aria-hidden by default means an unlabelled icon does not exist to assistive tech. A sighted user sees a warning; a screen reader user hears an empty cell."
+    },
+    {
+      "do": "Import icons at the call site: import { Truck } from 'lucide-react'",
+      "dont": "Re-export the icon set (or an icons/index.ts barrel) from the design system",
+      "why": "Icons are the classic bundle blowout: one barrel re-export can drag a four-digit count of components past tree-shaking. Consumers importing directly pay only for the icons they use."
+    },
+    {
+      "do": "Make icon-only actions a Button: <Button variant=\"ghost\" aria-label=\"Dismiss\"><Icon icon={X} /></Button>",
+      "dont": "Attach onClick to an Icon",
+      "why": "An Icon is presentation only — no focus, no keyboard activation, no 44px hit target, no role. A clickable icon works for exactly one input method: a mouse, aimed well."
+    }
+  ],
+
+  "examples": [
+    {
+      "title": "Decorative (the default)",
+      "description": "Adjacent text carries the meaning, so the icon is aria-hidden and inherits the text colour automatically.",
+      "code": "import { Check } from 'lucide-react';\n\n<span>\n  <Icon icon={Check} /> Saved\n</span>"
+    },
+    {
+      "title": "Meaningful",
+      "description": "The icon is the only content, so `label` names it — role=\"img\" and aria-label are set together.",
+      "code": "import { AlertTriangle } from 'lucide-react';\n\n<Icon icon={AlertTriangle} label=\"Delivery failed\" />"
+    },
+    {
+      "title": "Sizes",
+      "description": "Em-based: `md` is 20px inside body text and scales with whatever type size surrounds it.",
+      "code": "<Icon icon={Truck} size=\"sm\" />\n<Icon icon={Truck} size=\"md\" />\n<Icon icon={Truck} size=\"lg\" />"
+    },
+    {
+      "title": "Inside a Button",
+      "description": "The Button owns the semantics; the icon stays decorative.",
+      "code": "<Button variant=\"ghost\" size=\"sm\" aria-label=\"Dismiss notification\">\n  <Icon icon={X} />\n</Button>"
+    }
+  ],
+
+  "related": ["Button"],
+
+  "shadowImplementations": []
+}

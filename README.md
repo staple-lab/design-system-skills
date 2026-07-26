@@ -37,11 +37,15 @@ Docs drift from code because they get written twice. Props tables are extracted 
 
 **What ships:**
 
-- **DTCG design tokens** in three tiers, with OKLCH colour ramps tuned by measurement and a **contrast gate that fails the build** — not a review comment.
-- **A dependency-free token build** emitting CSS custom properties, TypeScript types, and Tailwind `@theme` / vanilla-extract contract / StyleX vars / Panda preset.
-- **A component inventory site** in the spirit of Atlassian, Polaris and Geist — props tables, keyboard maps, do/don't pairs, adoption, status board, token explorer with live theme and density switching.
-- **A behavioural contract test suite** — keyboard, focus restoration, controlled/uncontrolled parity, escape hatches, axe per variant.
+- **DTCG design tokens** in three tiers — including opacity and border-width scales — with OKLCH colour ramps tuned by measurement and a **contrast gate that fails the build** — not a review comment.
+- **A dependency-free token build** emitting CSS custom properties, TypeScript types, Tailwind `@theme` / vanilla-extract contract / StyleX vars / Panda preset, plus density (`[data-density="compact"]`) and multi-brand (`[data-brand]`) outputs from the same sources.
+- **A component roadmap in three waves** — wave 1 at init (`Button`, `TextField`, `Dialog`, `Icon`, and `Box`/`Stack`/`Inline` layout primitives with token-gated style props), then two named waves to a complete v1, each component annotated with what it exercises.
+- **An icon system** — a source-agnostic `Icon` wrapper (Lucide recommended, never bundled), decorative-by-default a11y, and the never-barrel-re-export rule.
+- **A component inventory site** in the spirit of Atlassian, Polaris and Geist — props tables, keyboard maps, do/don't pairs, adoption, status board, token explorer with live theme and density switching, plus authored **Patterns** and **Content** starter pages. It opens in your browser when init's verification passes.
+- **A behavioural contract test suite** — keyboard, focus restoration, controlled/uncontrolled parity, escape hatches, axe per variant — plus **Playwright visual regression** against the inventory site, out of the box.
 - **Four custom ESLint rules** that read the generated token file, so lint and tokens cannot disagree.
+- **An AI surface** — generated `AGENTS.md` + `llms.txt`, and a dependency-free **MCP server** over the registry and tokens (`npm run mcp`).
+- **Governance scaffolds** (CONTRIBUTING with the draft → stable gate, RFC template, CODEOWNERS) and a **jscodeshift codemod runner** for breaking changes.
 - **Packaging** — exports maps, `sideEffects`, RSC boundaries, changesets, publint/attw.
 
 Commands: `/design-system:init` · `:component` · `:tokens` · `:inventory` · `:audit` · `:publish`
@@ -55,12 +59,12 @@ See the [plugin README](plugins/design-system/README.md) for the full picture.
 plugins/design-system/
   .claude-plugin/plugin.json
   commands/     6 slash commands
-  skills/       10 skills (architect, tokens, primitives, CSS, API, motion,
-                inventory, testing, linting, packaging)
+  skills/       11 skills (architect, tokens, primitives, CSS, API, motion,
+                icons, inventory, testing, linting, packaging)
   agents/       component author · accessibility auditor
   templates/    the tested scaffolding — token build, registry builder,
-                reference components, contract tests, lint plugin,
-                inventory app, packaging + CI
+                reference components, contract tests + VRT, lint plugin,
+                inventory app, MCP server, codemods, governance, packaging + CI
 ```
 
 ## Contributing

@@ -55,6 +55,7 @@ This is the bar. Anything less and people go read the source instead — which i
 - **Token explorer** — searchable and filterable by tier, with copy-to-clipboard of the token name *and* the `var()`. Theme and density switchers apply live to the whole site, which is also the fastest way to spot a component that never got dark-mode treatment.
 - **Status board** — every component in one table: status, test coverage, a11y, bundle size, adoption. This is the page a design system lead opens on Monday, and it is what turns "we should improve the system" into a ranked list.
 - **Getting started** — install, theme setup, the first component, and the escape-hatch policy.
+- **Patterns** and **Content** — starter pages for cross-component judgement: forms wiring and validation timing, the three kinds of empty state, field- vs page-level errors, the skeleton-vs-spinner rule; and voice, action labels, the error-message pattern, a terminology table. These two pages are **authored, not generated** — the one deliberate exception to the registry rule, because a decision that spans components ("validate on blur, not keystroke") has no single source file to be extracted *from*. The template ships them as editable starter guidance in the site source, and each page's intro says so, so nobody waits for a generator to update them.
 - **Contribution** — how a component graduates draft → stable, who reviews, what the bar is. A system with no gate becomes a junk drawer within a year.
 
 ## Search
@@ -87,6 +88,10 @@ Full list: `tokens/dist/tokens.json`. Semantic tier only in components.
 ```
 
 Keep it **generated and short**. A 4,000-line AGENTS.md is skimmed by agents the same way it is by humans. Link out to the registry JSON for the exhaustive data — an agent can read it on demand, and it is the same file the site renders.
+
+The registry build emits **`llms.txt`** alongside `AGENTS.md` — same data, the llms.txt convention, for the tools that look for that filename instead. Two filenames, one generator; never author either by hand.
+
+For agents that speak MCP, `${CLAUDE_PLUGIN_ROOT}/templates/mcp/server.mjs` (dependency-free Node, wired as `npm run mcp` — see `${CLAUDE_PLUGIN_ROOT}/templates/mcp/README.md`) serves the registry and tokens live with four tools: `search_components`, `get_component`, `search_tokens`, `get_guidelines`. The division of labour: `AGENTS.md` is the ambient contract that costs nothing to have in context, the MCP server is the on-demand one — an agent queries for exactly the component it is writing against and gets current data, instead of a stale snapshot of everything.
 
 ## Building the site
 

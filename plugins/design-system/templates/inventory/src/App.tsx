@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { categories, registry, search, themeNames } from './data';
 import { ComponentPage } from './ComponentPage';
-import { Foundations, Overview, StatusBoard, TokenExplorer } from './pages';
+import { Content, Foundations, Overview, Patterns, StatusBoard, TokenExplorer } from './pages';
 
-type Route = { page: 'overview' | 'foundations' | 'tokens' | 'status' } | { page: 'component'; name: string };
+type Route =
+  | { page: 'overview' | 'foundations' | 'tokens' | 'patterns' | 'content' | 'status' }
+  | { page: 'component'; name: string };
 
 function parseHash(): Route {
   const hash = location.hash.replace(/^#\/?/, '');
   if (!hash) return { page: 'overview' };
   const [section, name] = hash.split('/');
   if (section === 'component' && name) return { page: 'component', name: decodeURIComponent(name) };
-  if (['foundations', 'tokens', 'status'].includes(section)) return { page: section as 'foundations' };
+  if (['foundations', 'tokens', 'patterns', 'content', 'status'].includes(section)) return { page: section as 'foundations' };
   return { page: 'overview' };
 }
 
@@ -95,6 +97,8 @@ export function App() {
             <NavItem active={route.page === 'overview'} href="#/">Overview</NavItem>
             <NavItem active={route.page === 'foundations'} href="#/foundations">Foundations</NavItem>
             <NavItem active={route.page === 'tokens'} href="#/tokens">Tokens</NavItem>
+            <NavItem active={route.page === 'patterns'} href="#/patterns">Patterns</NavItem>
+            <NavItem active={route.page === 'content'} href="#/content">Content</NavItem>
             <NavItem active={route.page === 'status'} href="#/status">Status board</NavItem>
           </ul>
 
@@ -149,6 +153,8 @@ export function App() {
         {route.page === 'overview' && <Overview />}
         {route.page === 'foundations' && <Foundations theme={theme} />}
         {route.page === 'tokens' && <TokenExplorer theme={theme} />}
+        {route.page === 'patterns' && <Patterns />}
+        {route.page === 'content' && <Content />}
         {route.page === 'status' && <StatusBoard />}
         {route.page === 'component' && <ComponentPage name={route.name} />}
       </main>

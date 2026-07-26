@@ -108,6 +108,21 @@
     "full": { "$value": { "value": 9999, "unit": "px" }, "$description": "Pills, avatars" }
   },
 
+  "border-width": {
+    "$type": "dimension",
+    "$description": "Three widths plus zero. 1px is the default everywhere; 2px is for emphasis states where 1px reads as unchanged; 4px is an indicator bar, not an outline.",
+    "none": { "$value": { "value": 0, "unit": "px" } },
+    "sm":   { "$value": { "value": 1, "unit": "px" }, "$description": "Default — inputs, cards, dividers, table rules" },
+    "md":   { "$value": { "value": 2, "unit": "px" }, "$description": "Selected states and focus rings. focus.ring-width references this, so a selected border and a focus ring carry the same weight" },
+    "lg":   { "$value": { "value": 4, "unit": "px" }, "$description": "Active-tab underlines, blockquote rules — an accent bar. As a full outline it swallows 8px of a 40px control" }
+  },
+
+  "opacity": {
+    "$type": "number",
+    "$description": "Deliberately tiny. Opacity on text silently destroys the ratios the contrast gate enforces — for text, use color.fg.muted / color.fg.disabled, which the gate can see. Whole-element fades are the only legitimate use.",
+    "disabled": { "$value": 0.5, "$description": "Disabled controls, whole-element. 0.5 drops 14.35:1 body text to 3.01:1 and a primary button's label to 2.04:1 — acceptable only because disabled UI is WCAG-exempt" }
+  },
+
   "font": {
     "family": {
       "$type": "fontFamily",

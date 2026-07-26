@@ -352,6 +352,208 @@ export function TokenExplorer({ theme }: { theme: string }) {
   );
 }
 
+export function Patterns() {
+  return (
+    <article className="page">
+      <header className="page-head">
+        <h1>Patterns</h1>
+        <p className="lede">Decisions that span more than one component, written down once.</p>
+        <p className="muted">
+          Unlike every other page here, this one is <strong>authored, not generated</strong> — starter
+          guidance the team edits directly (in <code>src/pages.tsx</code>) as its conventions form.
+        </p>
+      </header>
+
+      <section className="section">
+        <h2>Forms</h2>
+        <ul className="list">
+          <li>
+            Every input gets a visible label. A placeholder-as-label disappears the moment someone
+            types.
+          </li>
+          <li>
+            <code>TextField</code> already wires label, description and error to the input via{' '}
+            <code>aria-describedby</code> — compose fields from it rather than re-plumbing that per
+            form.
+          </li>
+          <li>
+            Validate format errors on <strong>blur</strong> and everything else on{' '}
+            <strong>submit</strong>. Validating per keystroke tells the user they are wrong while
+            they are still typing the right answer.
+          </li>
+          <li>
+            After a failed submit, move focus to the first invalid field and keep the error text
+            until the value changes.
+          </li>
+        </ul>
+      </section>
+
+      <section className="section">
+        <h2>Empty states</h2>
+        <p className="muted">
+          There are three kinds, and they need different messages — one generic “Nothing here”
+          serves none of them.
+        </p>
+        <ul className="list">
+          <li>
+            <strong>First use</strong> — nothing exists yet. Explain what will live here and lead
+            with the create action.
+          </li>
+          <li>
+            <strong>Cleared</strong> — the user finished the work (inbox zero). Acknowledge it;
+            don’t prompt them to make more work.
+          </li>
+          <li>
+            <strong>No results</strong> — a search or filter matched nothing. Echo what was searched
+            and offer to clear it; never imply the data doesn’t exist.
+          </li>
+        </ul>
+      </section>
+
+      <section className="section">
+        <h2>Errors</h2>
+        <ul className="list">
+          <li>
+            <strong>Field-level</strong> for anything the user can fix in place — attached to the
+            field, announced through the field’s description wiring.
+          </li>
+          <li>
+            <strong>Page-level</strong> (a banner) only when the problem is not attributable to one
+            field: the save failed, the session expired, the service is down.
+          </li>
+          <li>
+            Every error offers a recovery action — retry, edit, or where to get help. An error the
+            user can only stare at is a dead end.
+          </li>
+          <li>Keep the user’s input. An error that also empties the form punishes twice.</li>
+        </ul>
+      </section>
+
+      <section className="section">
+        <h2>Loading</h2>
+        <ul className="list">
+          <li>
+            <strong>Skeleton</strong> when the shape of the incoming content is known (a table, a
+            card grid) — it reserves layout. <strong>Spinner</strong> only when it is not (a search,
+            a computation).
+          </li>
+          <li>
+            Loaded content must land in the space the skeleton reserved. If the layout shifts on
+            arrival, the skeleton lied.
+          </li>
+          <li>Under ~300ms, show nothing — a flash of spinner reads slower than a brief wait.</li>
+          <li>
+            An in-flight action indicates on its triggering control (<code>loading</code> on the
+            Button), not on the whole page.
+          </li>
+        </ul>
+      </section>
+    </article>
+  );
+}
+
+export function Content() {
+  return (
+    <article className="page">
+      <header className="page-head">
+        <h1>Content</h1>
+        <p className="lede">How the product talks — voice, labels, errors and terminology.</p>
+        <p className="muted">
+          Like Patterns, this page is <strong>authored, not generated</strong> — a starter the team
+          edits directly (in <code>src/pages.tsx</code>).
+        </p>
+      </header>
+
+      <section className="section">
+        <h2>Voice</h2>
+        <ul className="list">
+          <li>Plain over clever. A sentence that needs re-reading failed.</li>
+          <li>
+            Address the user as “you”. The product says “we” only for things it did — “We couldn’t
+            save your changes”.
+          </li>
+          <li>
+            Front-load the point: the first few words are all that survive a truncated string, a
+            notification, or a screen reader’s listing.
+          </li>
+        </ul>
+      </section>
+
+      <section className="section">
+        <h2>Action labels</h2>
+        <div className="dodont">
+          <div className="dodont-cell ok">
+            <span className="dodont-label">Do</span>
+            <p>Name the action: “Delete project”, “Save changes”, “Invite teammate”</p>
+          </div>
+          <div className="dodont-cell no">
+            <span className="dodont-label">Don’t</span>
+            <p>Name the mechanism: “OK”, “Submit”, “Yes”, “Click here”</p>
+          </div>
+          <p className="dodont-why">
+            Screen-reader users pull up buttons as a list, out of context — nine buttons called “OK”
+            are nine identical entries. Verb + object also makes destructive confirms self-describing.
+          </p>
+        </div>
+      </section>
+
+      <section className="section">
+        <h2>Error messages</h2>
+        <p>
+          Every error message is <strong>what happened + how to fix it</strong>, in that order. No
+          blame (“you entered an invalid…”), no jargon (error codes, exception names), no dead ends.
+        </p>
+        <div className="dodont">
+          <div className="dodont-cell ok">
+            <span className="dodont-label">Do</span>
+            <p>“That file is over 10 MB. Compress it or choose a smaller one.”</p>
+          </div>
+          <div className="dodont-cell no">
+            <span className="dodont-label">Don’t</span>
+            <p>“Invalid input.” · “Error 422: Unprocessable entity.”</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <h2>Terminology</h2>
+        <p className="muted">
+          One name per concept, everywhere — this table is the arbiter when two features disagree.
+          Sentence case for everything: headings, buttons, labels, menu items.
+        </p>
+        <div className="table-scroll">
+          <table className="table">
+            <thead>
+              <tr>
+                <th scope="col">Use</th>
+                <th scope="col">Not</th>
+                <th scope="col">Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Delete</td>
+                <td>Remove, erase</td>
+                <td>“Remove” only for taking an item out of a collection that still exists elsewhere</td>
+              </tr>
+              <tr>
+                <td>Sign in / sign out</td>
+                <td>Log in, login</td>
+                <td>“Login” is a noun, not a verb</td>
+              </tr>
+              <tr>
+                <td className="muted" colSpan={3}>
+                  Add your product’s nouns here — this stub existing is the point of the page.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </article>
+  );
+}
+
 export function StatusBoard() {
   const rows = registry.components;
   return (

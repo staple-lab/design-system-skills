@@ -48,13 +48,18 @@ Notes that trip people up:
 - `2025.10` `dimension` values are objects (`{value, unit}`), not strings. Older tooling emits `"16px"`; the build script in this plugin accepts both and normalises.
 - `$description` is not decoration. It is what appears in the token explorer and what an AI agent reads to decide whether this is the right token. Write it for the person choosing between two similar tokens.
 
-Files, in `tokens/`:
+Files, in `tokens/` — the names are load-bearing, the build dispatches on them:
 
 | File | Contains |
 |---|---|
 | `primitive.tokens.json` | Raw ramps and scales. No references. Theme-independent. |
-| `semantic.tokens.json` | Meaning, per theme (`light`, `dark`, and any brand). All references. |
+| `semantic.<theme>.tokens.json` | Meaning, one file per theme. Same paths in every theme — a missing path is a hole. |
 | `component.tokens.json` | Per-component knobs. All references. |
+| `density.<name>.tokens.json` | Optional. Theme-independent re-values of *existing* tokens → a `[data-density='<name>']` block. |
+| `brand.<name>.tokens.json` | Optional. A brand's primitive palette, applied to every theme → `[data-brand='<name>']` blocks. |
+| `brand.<name>.<theme>.tokens.json` | Optional. Brand semantic re-points for one theme, for when the brand hue's contrast behaviour differs. |
+
+The default theme, density and brand are the plain document: no file suffix, no attribute. `comfortable` density is whatever the base files say, not a `density.comfortable` file.
 
 ## Naming
 
@@ -81,17 +86,18 @@ Read `references/scales.md` for the full construction method. In brief:
 - **Spacing** — a 4px base grid, geometric-ish: `0, 1, 2, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96`. Not every multiple of 4 — a scale with too many rungs is not a scale, it is permission.
 - **Type** — a modular scale (1.200 minor third for dense UI, 1.250 for standard product, 1.333+ for editorial), with `clamp()` for fluid sizes at display end. Line height is inverse to size: tight for headings (1.1–1.25), open for body (1.5–1.6).
 - **Radius / elevation / motion / z-index** — small, closed sets. Elevation especially: 4 levels maximum, each a *pair* of shadows (a tight contact shadow + a diffuse ambient one) or it looks flat and fake.
+- **Border width** — `none 0 · sm 1px · md 2px · lg 4px`. 1px is the default everywhere; 2px is emphasis (focus, selection); 4px is an indicator bar, not an outline.
+- **Opacity** — one token, `opacity.disabled = 0.5`, and the smallness is the point: opacity on text silently destroys the ratios the contrast gate enforces, so text dimming goes through `color.fg.muted` / `color.fg.disabled` (which the gate can see), and whole-element fades are the only legitimate use.
 
 ## Theming
 
 **A theme reassigns semantics. It never redefines primitives.** `blue.600` means the same hex in every theme; `color.bg.accent` is what points somewhere different.
 
 ```jsonc
-// semantic.tokens.json
-{
-  "light": { "color": { "bg": { "default": { "$value": "{color.neutral.50}"  } } } },
-  "dark":  { "color": { "bg": { "default": { "$value": "{color.neutral.950}" } } } }
-}
+// semantic.light.tokens.json
+{ "color": { "bg": { "default": { "$value": "{color.neutral.50}"  } } } }
+// semantic.dark.tokens.json — same paths, different targets
+{ "color": { "bg": { "default": { "$value": "{color.neutral.950}" } } } }
 ```
 
 Emitted as CSS custom properties under a selector per theme, which gives you free runtime switching with no rebuild and no flash:
@@ -109,7 +115,25 @@ That last block matters: it respects the OS preference *until* the user explicit
 2. Saturated colours vibrate on dark backgrounds. Desaturate accents by ~10–20% chroma and lift their lightness for dark.
 3. Pure white text on pure black is harsher than paper ever is. Use `neutral.50` on `neutral.950`, not `#fff` on `#000`.
 
-**Multi-brand** works the same way with another dimension: one semantic layer, several primitive palettes, `[data-brand="acme"][data-theme="dark"]`. Get the semantic layer right and a new brand is a JSON file.
+### Multi-brand
+
+One semantic layer, several primitive palettes, `[data-brand="acme"][data-theme="dark"]`. Get the semantic layer right and a new brand is a JSON file:
+
+- `brand.acme.tokens.json` overrides primitive ramps (usually just `color.accent.*`) and applies to **every** theme. The build re-resolves the whole semantic layer against the brand's primitives per theme and emits only the vars that changed: `[data-brand='acme']` for the default theme, `[data-brand='acme'][data-theme='dark']` for the others, plus a `prefers-color-scheme` variant so OS-dark users without an explicit choice get the brand's dark values too.
+- `brand.acme.<theme>.tokens.json` re-points semantic tokens for **one** theme. You need this when the brand hue's contrast behaviour differs from the default's — a green brand's solid fill lives at step 700, not 600 (see `references/scales.md`), so `color.bg.accent` must move per theme, not per palette.
+
+**The contrast gate runs on every (brand, theme) pair, and a brand that fails AA fails the build.** That is the point of doing brands in the build instead of in a stylesheet: rebrand-by-hue-swap silently losing button-label contrast is *the* classic multi-brand defect, and the same L 0.565 that gives white text 4.66:1 on the default blue gives 4.98:1 at hue 305 but fails outright on a light-peaking hue. A brand file naming an unknown theme kills the build; a brand with files for some themes but not all warns (missing themes keep base semantics — usually a hole, occasionally intentional).
+
+The template ships `brand.northwind.tokens.json.example` — inert because the loader only reads `*.tokens.json`; rename to activate. The config's `tokens.brands` array is the declaration; the files are the implementation, and the build warns when a declared brand has no file.
+
+### Density
+
+`density.<name>.tokens.json` re-values existing tokens with theme-independent values, emitted as a `[data-density='<name>']` block in `tokens.css`. Two rules, both build-enforced:
+
+1. **Existing tokens only.** A token introduced in a density file would exist only under the attribute and be undefined everywhere else — the build dies on unknown paths (which also catches typos).
+2. **Theme-independent resolution.** The build resolves the density overlay against every theme and dies if the results differ — a colour that changes with density would need per-theme density blocks nothing downstream expects. Dimensions and numbers only.
+
+Target the component-tier knobs (`control.height`, `control.padding-x`, `card.padding`), **not** the primitive `space` scale. Re-valuing `space.4` under compact would work — references re-resolve, so everything built on it tightens — but it tightens marketing-page hero rhythm along with the data tables, and it makes every "`space.4` = 16px" description a lie. The shipped `density.compact.tokens.json` drops `control.height.md` 40→32px, which loses the 44px touch target even counting the focus ring: compact is for pointer-first data UIs, never for touch.
 
 ## The build
 
@@ -117,12 +141,24 @@ That last block matters: it respects the OS preference *until* the user explicit
 
 | Output | For |
 |---|---|
-| `dist/tokens.css` | CSS custom properties, one block per theme |
+| `dist/tokens.css` | CSS custom properties — one block per theme, plus `[data-brand]` and `[data-density]` override blocks |
 | `dist/tokens.ts` | Typed constants + a `Token` union type for autocomplete |
-| `dist/tokens.json` | Flat resolved map — what the inventory site and AI agents read |
+| `dist/tokens.json` | Flat resolved map + `densities`/`brands` lists — what the inventory site and AI agents read |
 | `dist/theme.css` (`@theme`) · `contract.css.ts` · `tokens.stylex.ts` · `preset.ts` | whichever the CSS system needs |
 
-It also runs the **contrast gate**: every `fg`/`bg` semantic pair, in every theme, checked against WCAG. Failures fail the build with the measured ratio and the required one. Contrast as a CI gate rather than a review comment is the single highest-leverage accessibility decision available — it makes the failure impossible to merge rather than easy to miss.
+It also runs the **contrast gate**: every `fg`/`bg` semantic pair, in every theme *and every brand*, checked against WCAG. Failures fail the build with the measured ratio and the required one. Contrast as a CI gate rather than a review comment is the single highest-leverage accessibility decision available — it makes the failure impossible to merge rather than easy to miss.
+
+**How each CSS system picks up density and brand.** The override blocks are plain attribute-scoped custom properties, which is the one mechanism that works everywhere styles resolve through `var()` — and only there:
+
+| System | Density / brand switching |
+|---|---|
+| css-modules | Free. Components read `var(--ds-*)`; the attribute blocks in `tokens.css` cascade over them. |
+| Tailwind | Free. `theme.css` uses `@theme inline`, so utilities point at the *live* custom properties — flipping `data-density` or `data-brand` restyles with no rebuild. |
+| vanilla-extract | Free. The contract maps onto the same `--ds-*` names `tokens.css` defines. |
+| StyleX | **Not free.** `tokens.stylex.ts` bakes literal values into `defineVars` (that is what makes it statically analysable), so StyleX's own vars never see the attribute blocks. Generate a `stylex.createTheme` override from `dist/tokens.json` and apply it at the density/brand scope, or point the styles that must switch at `var(--ds-*)` directly. |
+| Panda | **Not free.** `preset.ts` feeds Panda raw values and Panda mints its own vars. Either extend the preset with conditions (`compact: '[data-density=compact] &'`) or layer `tokens.css` and reference `var(--ds-*)` where switching matters. |
+
+Density and brand files should touch disjoint tokens (dimensions vs colours — the build's theme-independence rule pushes density that way anyway); if both re-valued the same var, whichever block is emitted later would win with no combined `[data-brand][data-density]` selector to arbitrate.
 
 Swap to **Style Dictionary v5** if the team needs its plugin ecosystem or a Figma round-trip via Tokens Studio. Note that full `2025.10` support is still landing in v5; check before relying on the newest spec features.
 

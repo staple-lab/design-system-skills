@@ -1,0 +1,26 @@
+# CODEOWNERS.example — copy to .github/CODEOWNERS (or docs/CODEOWNERS) and replace the
+# team handles. GitHub then requests review from the owning team automatically and, with
+# branch protection's "require review from code owners", makes that review blocking.
+#
+# Scoping: the LAST matching pattern wins, so order from broad to specific. Scope
+# ownership to the design system's directories only — a root "*" rule makes the DS team
+# a bottleneck for every PR in the repo, which is how teams learn to route around it.
+
+# The system itself: components, tokens, and the build scripts that generate the registry.
+/src/design-system/                 @your-org/design-system
+/tokens/                            @your-org/design-system
+/scripts/build-registry.mjs         @your-org/design-system
+
+# Governance docs and RFCs — same owners, so proposals land in front of the maintainers.
+/governance/                        @your-org/design-system
+
+# Lint configs encode system policy; changing them changes the rules for everyone.
+/lint/                              @your-org/design-system
+
+# Generated artifacts: owned so a hand-edit (the classic drift vector) gets caught in
+# review. The registry check in CI is the real guard; this is the human backstop.
+/.design-system/                    @your-org/design-system
+
+# Example of narrowing: tokens also need a design sign-off, not just engineering.
+# Later rules override earlier ones, so this adds the second team for tokens only.
+# /tokens/*.tokens.json             @your-org/design-system @your-org/brand-design

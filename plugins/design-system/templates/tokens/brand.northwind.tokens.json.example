@@ -1,0 +1,21 @@
+{
+  "$description": "EXAMPLE brand file — inert while the name ends in .example; rename to brand.northwind.tokens.json to activate. A brand.<name>.tokens.json file applies to EVERY theme: it is where a brand's primitive palette lives (here, the accent ramp re-hued from 258 to 305, same L/C recipe — at L 0.565 the 600 step keeps white text at 4.98:1). The semantic layer is shared, so nothing else changes. If the new hue's contrast behaviour differs from the default's (green peaks light: its solid fill is step 700, not 600 — see references/scales.md), add brand.<name>.<theme>.tokens.json files that re-point the affected semantic tokens per theme. Either way the build runs the contrast gate on every (brand, theme) pair and fails on any AA miss.",
+  "color": {
+    "$type": "color",
+    "accent": {
+      "$description": "Northwind plum. Same lightness/chroma recipe as the default ramp, hue 305.",
+      "50":   { "$value": "oklch(0.977 0.013 305)" },
+      "100":  { "$value": "oklch(0.955 0.026 305)" },
+      "200":  { "$value": "oklch(0.925 0.049 305)" },
+      "300":  { "$value": "oklch(0.883 0.075 305)" },
+      "400":  { "$value": "oklch(0.820 0.113 305)" },
+      "500":  { "$value": "oklch(0.720 0.155 305)" },
+      "600":  { "$value": "oklch(0.565 0.185 305)", "$description": "Solid fills — white text clears 4.98:1 at this hue" },
+      "700":  { "$value": "oklch(0.500 0.180 305)" },
+      "800":  { "$value": "oklch(0.445 0.160 305)" },
+      "900":  { "$value": "oklch(0.400 0.135 305)" },
+      "950":  { "$value": "oklch(0.290 0.095 305)" },
+      "1000": { "$value": "oklch(0.190 0.060 305)" }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+/*
+ * The same Icon, styled with CSS Modules instead of Tailwind. Use ONE of these per
+ * project (`stack.cssSystem` in design-system.config.json), not both.
+ *
+ * Sizes are em-based so the icon tracks its surrounding text size — see Icon.tsx for
+ * the reasoning and for when to graduate to an `icon.size` component token instead.
+ *
+ * No `fill` or `stroke` rules here, deliberately: icon sets draw with currentColor
+ * themselves (lucide: stroke="currentColor" fill="none"), and a CSS `fill` would
+ * override the fill="none" presentation attribute — stroke icons become solid blobs.
+ */
+
+.icon {
+  display: inline-block;
+  flex-shrink: 0; /* icons sit in flex rows next to truncating text; never squash */
+  width: 1.25em; /* md default — 20px inside body (16px) text */
+  height: 1.25em;
+  vertical-align: -0.125em; /* optically centred against adjacent text */
+  user-select: none;
+}
+
+.sm {
+  width: 1em; /* 16px in body text — dense rows, inline-with-text */
+  height: 1em;
+}
+
+.lg {
+  width: 1.5em; /* 24px in body text — page headers, empty states */
+  height: 1.5em;
+}

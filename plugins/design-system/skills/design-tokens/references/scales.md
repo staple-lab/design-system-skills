@@ -70,7 +70,12 @@ Base grid **4px**. The scale, with names as multiples:
 
 Skip 7, 9, 11 and everything above 24 deliberately — a gap in a scale is a design decision, and the missing rungs are what stop people fine-tuning their way out of the system.
 
-**Density**: ship a `compact` mode by redefining the mid-scale as CSS vars (`--space-3: 8px; --space-4: 12px`) under `[data-density="compact"]`, rather than a second set of components. Data-dense tables need it; marketing pages never do.
+**Density**: ship a `compact` mode as token overrides (`density.compact.tokens.json` — the build emits the changed vars under `[data-density="compact"]`), never as a second set of components. There are two places to cut, and they are not equivalent:
+
+- **Re-value the component knobs** (`control.height`, `control.padding-x`, `card.padding`) — what the shipped file does. Controls drop 40→32px (md), card padding 24→16px. Tightens the data-dense chrome and leaves page rhythm untouched.
+- **Re-value the mid-scale primitives** (`space.3: 8px`, `space.4: 12px`) — references re-resolve, so *everything* built on them tightens at once. More reach for less authoring, but it compresses hero and marketing rhythm along with the tables, and every "`space.4` = 16px" description becomes a lie under the attribute.
+
+Data-dense tables need compact; marketing pages never do — which is the argument for the knob approach. Either way, a 32px control has lost the 44px touch target even counting the focus ring: compact is pointer-first, never touch.
 
 ---
 
@@ -116,6 +121,26 @@ Rules that hold across every product: line height falls as size rises (a 40px he
 Five values, no more: `none 0 · sm 4px · md 8px · lg 12px · xl 16px · full 9999px`.
 
 The one non-obvious rule: **nested radii must differ**. An inner element inside a padded container needs `outer − padding` or the curves look wrong. `inner = outer - padding` is the correct relationship, and it is worth a token comment because it is the most common visual bug in a system.
+
+---
+
+## Border width
+
+Four values: `none 0 · sm 1px · md 2px · lg 4px`. Each has a job:
+
+- **1px** is the default for everything with an edge — inputs, cards, dividers, table rules.
+- **2px** is emphasis: selected cards, active segmented-control items, and the focus ring (`focus.ring-width` references `border-width.md`, so a selected border and a focus ring carry the same visual weight instead of accidentally differing by a pixel). The 1→2px bump is also the reliable non-colour signal for selection — a state conveyed by border *colour* alone still needs that colour at 3:1, and a width change sidesteps the whole question.
+- **4px** is an indicator bar — active-tab underline, blockquote rule, one edge only. As a full outline it swallows 8px of a 40px control's interior; if you find yourself wanting a 4px border on all four sides, what you want is a background change.
+
+No 3px, no 1.5px. On non-integer device-pixel-ratio screens (1.5× is common on Windows) fractional widths round unpredictably per edge, and a scale with a value between "default" and "emphasis" is an invitation to split the difference forever.
+
+---
+
+## Opacity
+
+One token: `opacity.disabled = 0.5`. The set is deliberately this small because opacity is the invisible contrast killer — the gate checks resolved token pairs, and an `opacity` applied in a component composites *after* that check. Measured against the shipped ramps: 0.5 turns 14.35:1 body text into 3.01:1, and a primary button's white-on-accent label into 2.04:1. Disabled is the one place that is acceptable, because disabled UI is WCAG-exempt — though below ~2.5:1 it stops reading as "disabled" and starts reading as "broken", so 0.5 is close to the floor, not a starting point for further dimming.
+
+For every other dimming job, use the colour tokens the gate *can* see: `color.fg.muted` for secondary text, `color.fg.disabled` when text must stay legible while the control is off. If a design keeps reaching for element opacity — hover fades, overlay tints — encode the result as a colour token (the way `color.bg.overlay` bakes its alpha into an `oklch(... / 0.6)` value) so it is named, themed and checkable.
 
 ---
 

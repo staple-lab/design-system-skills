@@ -86,22 +86,23 @@ Each step is a skill. Invoke it; don't improvise from memory. The spine is seria
 1. **`design-tokens`** — DTCG sources, three tiers, light/dark, the build script, the contrast gate. Nothing can be styled until this exists.
 2. **`css-systems`** — wire the token output into the chosen CSS system so `color.bg.accent` is reachable the idiomatic way (a Tailwind `@theme` block, a vanilla-extract contract, a StyleX `defineVars`, a Panda preset, a CSS var sheet).
 3. **`motion-system`** — motion tokens, the reduced-motion strategy, the shared animation primitives. This runs *before* the components deliberately: `Dialog` animates on day one, so the motion tokens and reduced-motion pattern must already exist for its author to consume.
-4. **Install the primitive layer and scaffold the shared harness** — install the chosen primitive package, copy the test harness (`${CLAUDE_PLUGIN_ROOT}/templates/testing/vitest.config.ts`, `vitest.setup.ts`) and the lint configs once, now, so the parallel authors below never race to create them.
+4. **Install the primitive layer and scaffold the shared harness** — install the chosen primitive package, copy the test harness (`${CLAUDE_PLUGIN_ROOT}/templates/testing/vitest.config.ts`, `vitest.setup.ts`) and the lint configs once, now, so the parallel authors below never race to create them. Copy the governance scaffolds in the same pass — `${CLAUDE_PLUGIN_ROOT}/templates/governance/` ships `CONTRIBUTING.md` (the draft→stable gate), an RFC template and a `CODEOWNERS.example` — because "nobody owns it" is a failure mode you prevent at scaffold time, not one you retrofit. Copy the codemod runner too (`${CLAUDE_PLUGIN_ROOT}/templates/codemods/`, wired as `npm run codemod`): it earns nothing today and everything at the first breaking change.
 
-**Fan out — three `ds-component-author` subagents, dispatched in a single message:**
+**Fan out — four `ds-component-author` subagents, dispatched in a single message** (the full v1 build order beyond this wave is `references/component-roadmap.md` — read it before promising anyone a component list):
 
 - `Button` — variants, sizes, states, icon slots
 - `TextField` — label/description/error, controlled + uncontrolled, form integration
 - `Dialog` — portal, focus trap, scroll lock, animation
+- `Icon` + the layout primitives `Box`, `Stack`, `Inline` — one agent for all four, because they share a property: no state, no ARIA of their own, nothing to wrap. Icon starts from `${CLAUDE_PLUGIN_ROOT}/templates/components/Icon/Icon.tsx` (the `icon-system` skill owns the library decision); the layout primitives take token-gated style props only, and the roadmap explains why they belong in wave 1 — they are what stops product teams hand-rolling flex divs on day one.
 
-Those three exercise every hard problem in the system — polymorphism, forms, portals, focus, motion. Get them right and the rest are variations. Get them wrong and you rewrite fifty components. They are **independent of each other** once tokens, CSS wiring and motion exist — each writes only its own directory, contract test and `.meta.json` — so build them concurrently. Tell each agent explicitly: the harness and configs already exist; consult `component-api-design`, `primitive-libraries`, `css-systems` and `component-testing` as it works; and **do not regenerate the registry** — concurrent regens race on writing `registry.json`. When all three return, the parent runs the registry build once.
+Button, TextField and Dialog exercise every hard problem in the system — polymorphism, forms, portals, focus, motion. Get them right and the rest are variations. Get them wrong and you rewrite fifty components. All four dispatches are **independent of each other** once tokens, CSS wiring and motion exist — each writes only its own directories, contract tests and `.meta.json` — so build them concurrently. Tell each agent explicitly: the harness and configs already exist; consult `component-api-design`, `primitive-libraries`, `css-systems` and `component-testing` as it works; and **do not regenerate the registry** — concurrent regens race on writing `registry.json`. When all four return, the parent runs the registry build once.
 
 Stop and show the user here. Three real components in their colours is the moment they can tell you it's wrong — and it is much cheaper to hear that then than after fifty.
 
 **Serial tail:**
 
 5. **`design-system-linting`** — the enforcement layer: token rules, a11y rules, import boundaries.
-6. **`component-inventory`** — the registry generator, then the site that reads it, then `AGENTS.md` (also generated from the registry). Independent of step 5 (lint reads the generated token file, inventory reads the registry) — run them in either order, or as two parallel subagents if the components came back clean.
+6. **`component-inventory`** — the registry generator, then the site that reads it (including the authored Patterns and Content starter pages), then the AI surface: `AGENTS.md` and `llms.txt`, both generated from the registry, plus the registry MCP server (`${CLAUDE_PLUGIN_ROOT}/templates/mcp/server.mjs`, wired as `npm run mcp`). Wire visual regression here too — `${CLAUDE_PLUGIN_ROOT}/templates/testing/playwright.config.ts` and `${CLAUDE_PLUGIN_ROOT}/templates/testing/vrt/inventory.vrt.spec.ts` screenshot the inventory site itself, so every component's visual baseline comes free with its docs page. Independent of step 5 (lint reads the generated token file, inventory reads the registry) — run them in either order, or as two parallel subagents if the components came back clean.
 7. **`packaging-distribution`** — only if the brief says package.
 
 ## Step 5 — Verify, then report
@@ -122,6 +123,14 @@ npm run inventory:build
 ```
 
 If a step fails, fix it. Do not report a green build you did not see, and do not describe a step you skipped as done — say which parts are complete and which are not.
+
+**When everything is green, show it, don't describe it.** Launch the inventory dev server in the background and open it in the user's browser:
+
+```bash
+npm run inventory -- --open    # run in the background; Vite opens the browser itself
+```
+
+Report the URL Vite prints (typically `http://localhost:5173`). Seeing their own components in their own colours is worth more than any summary you can write — it is also the fastest way for the user to spot the thing they want changed. Skip the auto-open when running headless or in CI; print the URL and move on.
 
 ## What separates a design system that gets adopted
 
