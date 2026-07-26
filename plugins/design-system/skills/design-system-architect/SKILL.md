@@ -56,7 +56,7 @@ Read `references/stack-menu.md` for the full menu behind each question — the f
 | 3 | `CSS system` | How should components be styled? | **Tailwind v4** — CSS-first `@theme`, tokens are CSS vars by default · **CSS Modules** — plain CSS, zero build magic, RSC-safe · **StyleX** — Meta's build-time atomic CSS, typed, strict · **vanilla-extract** — typed `.css.ts`, compile-time token contracts |
 | 4 | `Motion` | What drives animation? | **Motion (`motion/react`)** — React-first, ~5kb mini bundle, best for UI · **GSAP** — timeline + ScrollTrigger, best when motion is the brand · **CSS-only** — transitions + `@keyframes` from motion tokens, zero JS · **Motion + GSAP** — Motion for UI, GSAP for scroll set-pieces |
 
-Adjust the recommendation to the survey: an existing Radix codebase makes Radix the recommendation, not Base UI. A marketing-heavy or scroll-choreographed product makes GSAP the recommendation. Say the *why* in the option description — the user is picking a five-year commitment.
+Adjust the recommendation to the survey: an existing Radix codebase makes Radix the recommendation, not Base UI. A marketing-heavy or scroll-choreographed product makes GSAP the recommendation. A Tailwind shop that wants velocity over a bespoke look is the cue to surface HeroUI (React Aria + Tailwind v4, see the stack menu) as the component-layer option — note it locks the CSS-system answer to Tailwind v4. Say the *why* in the option description — the user is picking a five-year commitment.
 
 ### Round 2 — design + delivery (4 questions)
 

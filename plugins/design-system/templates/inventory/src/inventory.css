@@ -425,7 +425,9 @@ h3 {
 }
 .card-stage {
   display: flex;
+  flex-wrap: wrap; /* multi-part examples (a variants row) stack rather than clip */
   align-items: center;
+  align-content: center;
   justify-content: center;
   gap: var(--ds-space-2);
   height: 7.5rem;

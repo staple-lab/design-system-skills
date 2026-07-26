@@ -45,7 +45,7 @@ What sits between the primitives and the product.
 | **MUI** | `@mui/material`. Enormous component set, mature data grid + date pickers, strong enterprise support. The theming API is a world of its own and the visual identity is hard to escape. Best when velocity beats distinctiveness. |
 | **Mantine** | `@mantine/core`. Batteries-included but lighter than MUI, excellent hooks library, CSS-modules-based styling. A good middle path. |
 | **Chakra UI** | v3 rebuilt on Ark/Zag with a Panda-style styling engine. Strong composition story. |
-| **HeroUI** (was NextUI) | Tailwind-native, opinionated modern look, React Aria underneath. |
+| **HeroUI** (was NextUI) | `@heroui/react`, v3 (ground-up rewrite, Mar 2026). React Aria Components underneath, Tailwind **v4** styling, 75+ components with a compound API (`Card.Header`, `Select.Item`), no `<Provider>`, CSS-only animation, and an AI surface (MCP server, `llms.txt`, agent skills) out of the box. Apache 2.0. **Picking it decides two questions at once** — it requires Tailwind v4, so the CSS-system answer is coupled — and it is a pre-styled library: strong a11y + velocity, but the modern-gradient look is its identity, not yours. Surface it when the interview says Tailwind + React Aria and velocity beats brand. |
 | **Ant Design** | `antd`. Dense enterprise/admin surfaces, very complete forms and tables, strong in APAC markets. Distinctive look, heavy. |
 | **Park UI / Radix Themes** | Pre-styled layers over Ark and Radix respectively — a fast way to a coherent look before you invest in your own. |
 
