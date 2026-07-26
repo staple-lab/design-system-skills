@@ -69,13 +69,11 @@ export function App() {
         Skip to content
       </a>
 
-      <aside className="sidebar">
-        <header className="sidebar-head">
-          <a href="#/" className="wordmark">
-            {registry.system.name}
-            <span className="version">v{registry.system.version}</span>
-          </a>
-        </header>
+      <header className="topbar">
+        <a href="#/" className="wordmark">
+          {registry.system.name}
+          <span className="version">v{registry.system.version}</span>
+        </a>
 
         <div className="search-wrap">
           <input
@@ -88,47 +86,11 @@ export function App() {
             aria-label="Search the design system"
           />
           <kbd className="search-kbd" aria-hidden="true">
-            /
+            ⌘K
           </kbd>
         </div>
 
-        <nav aria-label="Design system">
-          <ul className="nav">
-            <NavItem active={route.page === 'overview'} href="#/">Overview</NavItem>
-            <NavItem active={route.page === 'foundations'} href="#/foundations">Foundations</NavItem>
-            <NavItem active={route.page === 'tokens'} href="#/tokens">Tokens</NavItem>
-            <NavItem active={route.page === 'patterns'} href="#/patterns">Patterns</NavItem>
-            <NavItem active={route.page === 'content'} href="#/content">Content</NavItem>
-            <NavItem active={route.page === 'status'} href="#/status">Status board</NavItem>
-          </ul>
-
-          {grouped.map(([category, items]) => (
-            <div key={category} className="nav-group">
-              <h2 className="nav-heading">{category}</h2>
-              <ul className="nav">
-                {items.map((c) => (
-                  <NavItem
-                    key={c.name}
-                    href={`#/component/${c.name}`}
-                    active={route.page === 'component' && route.name === c.name}
-                  >
-                    {c.name}
-                    <StatusDot status={c.status} />
-                  </NavItem>
-                ))}
-              </ul>
-            </div>
-          ))}
-
-          {query && !results.length && (
-            <p className="empty">
-              Nothing matches “{query}”. If you expected a component here, that gap is worth
-              reporting — a failed search is the main reason duplicates get built.
-            </p>
-          )}
-        </nav>
-
-        <footer className="sidebar-foot">
+        <div className="topbar-controls">
           <label className="control">
             <span>Theme</span>
             <select value={theme} onChange={(e) => setTheme(e.target.value)}>
@@ -146,18 +108,61 @@ export function App() {
               <option value="compact">compact</option>
             </select>
           </label>
-        </footer>
-      </aside>
+        </div>
+      </header>
 
-      <main id="main" className="main" tabIndex={-1}>
-        {route.page === 'overview' && <Overview />}
-        {route.page === 'foundations' && <Foundations theme={theme} />}
-        {route.page === 'tokens' && <TokenExplorer theme={theme} />}
-        {route.page === 'patterns' && <Patterns />}
-        {route.page === 'content' && <Content />}
-        {route.page === 'status' && <StatusBoard />}
-        {route.page === 'component' && <ComponentPage name={route.name} />}
-      </main>
+      <div className="body">
+        <aside className="sidebar">
+          <nav aria-label="Design system">
+            <ul className="nav">
+              <NavItem active={route.page === 'overview'} href="#/">Overview</NavItem>
+              <NavItem active={route.page === 'foundations'} href="#/foundations">Foundations</NavItem>
+              <NavItem active={route.page === 'tokens'} href="#/tokens">Tokens</NavItem>
+              <NavItem active={route.page === 'patterns'} href="#/patterns">Patterns</NavItem>
+              <NavItem active={route.page === 'content'} href="#/content">Content</NavItem>
+              <NavItem active={route.page === 'status'} href="#/status">Status board</NavItem>
+            </ul>
+
+            {grouped.map(([category, items]) => (
+              <div key={category} className="nav-group">
+                <h2 className="nav-heading">
+                  {category}
+                  <span className="nav-count">{items.length}</span>
+                </h2>
+                <ul className="nav">
+                  {items.map((c) => (
+                    <NavItem
+                      key={c.name}
+                      href={`#/component/${c.name}`}
+                      active={route.page === 'component' && route.name === c.name}
+                    >
+                      {c.name}
+                      <StatusDot status={c.status} />
+                    </NavItem>
+                  ))}
+                </ul>
+              </div>
+            ))}
+
+            {query && !results.length && (
+              <p className="empty">
+                Nothing matches “{query}”. If you expected a component here, that gap is worth
+                reporting — a failed search is the main reason duplicates get built.
+              </p>
+            )}
+          </nav>
+        </aside>
+
+        <main id="main" className="main" tabIndex={-1}>
+          {route.page === 'overview' && <Overview results={results} query={query} />}
+          {route.page === 'foundations' && <Foundations theme={theme} />}
+          {route.page === 'tokens' && <TokenExplorer theme={theme} />}
+          {route.page === 'patterns' && <Patterns />}
+          {route.page === 'content' && <Content />}
+          {route.page === 'status' && <StatusBoard />}
+          {route.page === 'component' && <ComponentPage name={route.name} />}
+        </main>
+      </div>
     </div>
   );
 }

@@ -1,47 +1,92 @@
-import { useMemo, useState } from 'react';
+import { createElement, useMemo, useState } from 'react';
 import { StatusDot } from './App';
-import { consumersOf, registry, searchTokens, tokens, type Token } from './data';
+import { categories, consumersOf, examplesFor, registry, searchTokens, tokens, themeNames, type Component, type Token } from './data';
 
-export function Overview() {
+export function Overview({ results, query }: { results: Component[]; query: string }) {
   const { system, counts } = registry;
+
+  // The hero numbers are the build gates, measured — the same figures CI enforces.
+  const tokenCount = Object.keys(tokens.themes[themeNames[0]] ?? {}).length;
+  const contrast = tokens.contrast.filter((c) => c.theme === themeNames[0]);
+  const contrastPassing = contrast.filter((c) => c.pass).length;
+  const tested = registry.components.filter((c) => c.tests);
+  const testsTotal = tested.reduce((n, c) => n + (c.tests?.total ?? 0), 0);
+  const testsPassing = tested.reduce((n, c) => n + (c.tests?.passing ?? 0), 0);
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, Component[]>();
+    for (const c of results) map.set(c.category, [...(map.get(c.category) ?? []), c]);
+    return [...map.entries()].sort(([a], [b]) => categories.indexOf(a) - categories.indexOf(b));
+  }, [results]);
+
   return (
     <article className="page">
-      <header className="page-head">
+      <header className="page-head hero">
+        <p className="eyebrow">Design system</p>
         <h1>{system.name}</h1>
         <p className="lede">
           {counts.total} components on {system.primitives}, styled with {system.cssSystem}
-          {system.motion !== 'none' && `, animated with ${system.motion}`}.
+          {system.motion !== 'none' && `, animated with ${system.motion}`}. Everything on this site
+          is generated from the registry — the props, the numbers, and the pictures.
         </p>
+
+        <dl className="hero-stats">
+          <div className="hero-stat">
+            <dt>Components</dt>
+            <dd>
+              {counts.total} <small>{counts.byStatus.stable ?? 0} stable</small>
+            </dd>
+          </div>
+          <div className="hero-stat">
+            <dt>Tokens</dt>
+            <dd>{tokenCount}</dd>
+          </div>
+          <div className="hero-stat">
+            <dt>Contrast pairs</dt>
+            <dd className={contrastPassing === contrast.length ? 'ok' : 'no'}>
+              {contrastPassing}/{contrast.length} <small>build-gated</small>
+            </dd>
+          </div>
+          <div className="hero-stat">
+            <dt>Tests</dt>
+            <dd className={testsTotal > 0 && testsPassing === testsTotal ? 'ok' : undefined}>
+              {testsTotal > 0 ? `${testsPassing}/${testsTotal}` : '—'} <small>measured</small>
+            </dd>
+          </div>
+        </dl>
       </header>
 
-      <section className="section">
-        <h2>Library</h2>
-        <dl className="quality">
-          {Object.entries(counts.byStatus).map(([status, n]) => (
-            <div key={status} className="stat">
-              <dt>{status}</dt>
-              <dd>{n}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
+      {grouped.map(([category, items]) => (
+        <section key={category} aria-label={category}>
+          <div className="category-head">
+            <h3>{category}</h3>
+            <span className="category-count">{items.length}</span>
+          </div>
+          <div className="card-grid">
+            {items.map((c) => (
+              <ComponentCard key={c.name} component={c} />
+            ))}
+          </div>
+        </section>
+      ))}
 
-      <section className="section">
-        <h2>How this site works</h2>
-        <p>
-          Everything here is generated from <code>.design-system/registry.json</code>, which is built
-          from the component source, the token files and the last test and lint runs. Props tables are
-          extracted from the real TypeScript types, so they cannot be out of date; test and
-          accessibility figures are the measured results, not claims.
+      {query && !results.length && (
+        <p className="empty">
+          Nothing matches “{query}”. If you expected a component here, that gap is worth reporting —
+          a failed search is the main reason duplicates get built.
         </p>
+      )}
+
+      <section className="section" style={{ marginTop: 'var(--ds-space-10)' }}>
+        <h2>How this site works</h2>
         <p className="muted">
-          The same registry generates <code>AGENTS.md</code>, so coding agents work from exactly the
+          Everything here is generated from <code>.design-system/registry.json</code>, built from the
+          component source, the token files and the last test and lint runs. Props tables are extracted
+          from the real TypeScript types; test and accessibility figures are measured results, not
+          claims; card previews render the real components. The same registry generates{' '}
+          <code>AGENTS.md</code> and <code>llms.txt</code>, so coding agents work from exactly the
           information on this page.
         </p>
-      </section>
-
-      <section className="section">
-        <h2>Getting started</h2>
         <pre className="code">
           <code>{`import { Button } from '${system.packageName ?? '@/design-system'}';
 
@@ -56,6 +101,34 @@ export function Overview() {
         </ul>
       </section>
     </article>
+  );
+}
+
+/**
+ * The card preview is the component's first live example, rendered inert — an exhibit,
+ * not a control. Where no examples file exists yet, the card says so rather than faking
+ * a thumbnail: an illustration would drift; a live render cannot.
+ */
+function ComponentCard({ component }: { component: Component }) {
+  const live = examplesFor(component.name);
+  const first = component.examples[0];
+  const exportName = first ? first.title.replace(/[^A-Za-z0-9]/g, '') : '';
+  const Live = first ? (live[exportName] ?? live[`Example${exportName}`]) : undefined;
+
+  return (
+    <a className="card" href={`#/component/${component.name}`}>
+      {/* inert (React 19+) keeps the specimen's buttons/inputs out of the tab order. */}
+      <div className="card-stage" inert>
+        {Live ? createElement(Live) : <span className="card-stage-empty">{component.name}</span>}
+      </div>
+      <div className="card-body">
+        <span className="card-name">
+          {component.name}
+          <StatusDot status={component.status} />
+        </span>
+        <p className="card-summary">{component.summary}</p>
+      </div>
+    </a>
   );
 }
 
@@ -83,6 +156,7 @@ export function Foundations({ theme }: { theme: string }) {
   return (
     <article className="page">
       <header className="page-head">
+        <p className="eyebrow">Reference · generated</p>
         <h1>Foundations</h1>
         <p className="lede">The values everything else is built from, shown in the {theme} theme.</p>
       </header>
@@ -280,6 +354,7 @@ export function TokenExplorer({ theme }: { theme: string }) {
   return (
     <article className="page">
       <header className="page-head">
+        <p className="eyebrow">Reference · generated</p>
         <h1>Tokens</h1>
         <p className="lede">
           {rows.length} of {Object.keys(tokens.themes[theme] ?? {}).length} tokens in the {theme} theme.
@@ -356,6 +431,7 @@ export function Patterns() {
   return (
     <article className="page">
       <header className="page-head">
+        <p className="eyebrow">Guidance · authored</p>
         <h1>Patterns</h1>
         <p className="lede">Decisions that span more than one component, written down once.</p>
         <p className="muted">
@@ -456,6 +532,7 @@ export function Content() {
   return (
     <article className="page">
       <header className="page-head">
+        <p className="eyebrow">Guidance · authored</p>
         <h1>Content</h1>
         <p className="lede">How the product talks — voice, labels, errors and terminology.</p>
         <p className="muted">
@@ -559,6 +636,7 @@ export function StatusBoard() {
   return (
     <article className="page">
       <header className="page-head">
+        <p className="eyebrow">Reference · generated</p>
         <h1>Status board</h1>
         <p className="lede">The whole library in one table — what is solid, what needs work, what is used.</p>
         <p className="muted">

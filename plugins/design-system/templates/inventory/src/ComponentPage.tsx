@@ -11,6 +11,7 @@ export function ComponentPage({ name }: { name: string }) {
   return (
     <article className="page">
       <header className="page-head">
+        <p className="eyebrow">{component.category}</p>
         <div className="page-title-row">
           <h1>{component.name}</h1>
           <span className={`badge badge-${component.status}`}>
