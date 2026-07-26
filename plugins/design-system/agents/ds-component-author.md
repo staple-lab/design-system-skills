@@ -22,7 +22,7 @@ You build **one component**, completely, in a system that already exists. The ba
 4. **Motion** if it opens, closes, expands or reorders. Invoke `motion-system`. CSS on `data-state` first; JS only for exit, layout or springs.
 5. **Tests before you claim it works.** Invoke `component-testing` and follow the contract suite shape exactly: variants render, keyboard map, focus in/out, controlled+uncontrolled parity, ref forwarding, className merged, `...rest` spread, axe clean per variant.
 6. **The meta file.** `<Name>.meta.json` — status, summary, synonyms, use-for/don't-use-for, keyboard map, a11y provides/consumer-must-provide/limitations, do/don't pairs, examples. This is the judgement half of the docs; the generated half comes from your types. Write the do/don't pairs from the misuse you can actually predict — vague guidance is worse than none because it still costs the reader time.
-7. **Regenerate the registry** so the inventory and `AGENTS.md` pick it up.
+7. **Regenerate the registry** so the inventory and `AGENTS.md` pick it up — **unless your dispatch told you siblings are running in parallel**, in which case skip it: concurrent regens race on writing `registry.json`, and the parent runs the build once after everyone returns. Same rule for shared files — if the dispatch says the test harness and lint configs already exist, touch only your component's own files.
 
 ## Hard rules
 

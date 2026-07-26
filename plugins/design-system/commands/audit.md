@@ -9,7 +9,7 @@ Scope: `$ARGUMENTS` (default: the whole repo, excluding the design system packag
 
 This is a **measurement** task. Produce numbers the team can act on, not adjectives.
 
-Run the checks, in parallel where possible:
+Run the six checks below **as parallel subagents dispatched in a single message** — they are read-only and independent of each other, so run together they cost the slowest check, not the sum of all six. Give each subagent one numbered check and have it return counts by file (worst offenders first), not prose; the parent merges and ranks. Only fall back to running them inline (as parallel tool calls per batch) if the scope is a single small directory.
 
 1. **Hardcoded values that should be tokens.** Grep the product code for raw hex/rgb/hsl colours, `px` values outside the spacing scale, raw `font-family`/`font-size`, hardcoded `z-index`, raw durations/easings. Report count by file, worst offenders first. If the lint plugin is installed, run it instead of grepping — it has fewer false positives.
 2. **Shadow components.** Find local implementations that duplicate a registry component (a hand-rolled `<button className="...">`, a bespoke modal, a custom dropdown). Cross-reference against `.design-system/registry.json`. These are the real adoption cost.

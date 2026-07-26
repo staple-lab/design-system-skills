@@ -12,17 +12,8 @@ Read `design-system.config.json` first (search upward from cwd; if there is none
 Then:
 
 1. **Check the registry** (`.design-system/registry.json`) — does a component already cover this? Extending an existing component beats adding a near-duplicate. Say so if that is the case.
-2. Invoke `component-api-design` for the props contract. Resolve, explicitly:
-   - controlled / uncontrolled / both (and the `defaultX` + `onXChange` pair)
-   - composition shape: single component with props, or compound parts (`Foo.Root` / `Foo.Item`)
-   - polymorphism: `render` prop (Base UI), `asChild` (Radix), or `as` — whatever the rest of the system uses
-   - variants + sizes, and which are token-driven
-   - forwarded ref, `...rest` spread onto which element, `data-*` state attributes for styling
-3. Invoke `primitive-libraries` for the correct primitive and its a11y contract (roles, focus management, keyboard map). If the primitive layer already ships this component, wrap it — never re-implement a focus trap or a listbox by hand.
-4. Invoke `css-systems` to style it with **semantic tokens only**. No raw hex, no magic numbers. Any new value becomes a token first.
-5. Invoke `motion-system` if it opens, closes, expands or reorders — use the motion tokens and respect `prefers-reduced-motion`.
-6. Invoke `component-testing` and write the behavioural suite before you claim it works: keyboard map, controlled/uncontrolled parity, ref forwarding, `data-*` states, axe clean in every variant, RTL user-event flows.
-7. Add the **registry entry** — this is what makes the component visible to both the inventory site and to AI agents. Fill in every field: status, props, slots, a11y notes, do/don't, examples, tokens consumed.
-8. Regenerate docs: run the registry build so the inventory picks it up.
+2. **Dispatch a `ds-component-author` subagent** to build it. That agent owns the full recipe — props contract (`component-api-design`), primitive wrapping (`primitive-libraries`), token-only styling (`css-systems`), motion (`motion-system`), the behavioural suite (`component-testing`) and the `.meta.json`. Do not re-run that recipe inline: it pulls every one of those skills plus every authored file into this conversation, which is exactly the context weight that makes the rest of the session slow. Pass the agent the component name, the notes from `$ARGUMENTS`, and the resolved config.
+3. **Several components requested?** Dispatch one author per component, **all in a single message so they run in parallel** — components are independent of each other; serially they cost the sum, in parallel they cost the slowest. Tell each: do not regenerate the registry (concurrent regens race on `registry.json`).
+4. When the author(s) return, **regenerate the registry once** so the inventory and `AGENTS.md` pick the work up.
 
-Verify: typecheck, tests, lint, and the component rendering in the inventory site. Report real output.
+Verify — typecheck, tests, lint **as parallel tool calls in one message** (they are independent), then the component rendering in the inventory site. Report real output.

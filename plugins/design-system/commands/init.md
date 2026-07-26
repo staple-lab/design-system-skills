@@ -17,9 +17,9 @@ The short version of what must happen — the skill has the detail:
    - Round 2 — *design + delivery*: colour direction · typography · distribution · scope.
    Pre-select the option that matches `$ARGUMENTS` or the repo, and say why it is recommended.
 3. **Write the brief** to `design-system.config.json` at the DS root. This file is the contract every later command reads. Show it to the user before building.
-4. **Scaffold**, in this order (each step is a skill — invoke it, don't improvise):
-   `design-tokens` → `css-systems` → `primitive-libraries` + `component-api-design` → `motion-system` → `component-testing` → `design-system-linting` → `component-inventory` → `packaging-distribution` (only if the brief says package).
-5. **Verify before claiming done**: token build runs, typecheck passes, tests pass, lint passes, inventory site builds. Report the actual command output. If something fails, fix it — do not report a green build you did not see.
+4. **Scaffold** — a serial spine, then a parallel fan-out (each step is a skill — invoke it, don't improvise):
+   `design-tokens` → `css-systems` → `motion-system` → primitive install + shared test/lint harness, **then the three reference components (`Button`, `TextField`, `Dialog`) as three `ds-component-author` subagents dispatched in a single message** — they are independent once tokens, CSS wiring and motion exist, and building them inline is both the slowest stretch of init and the one that bloats the conversation. Parent regenerates the registry once when all three return, then `design-system-linting` → `component-inventory` → `packaging-distribution` (only if the brief says package).
+5. **Verify before claiming done**: run the token build first (everything reads its output), then typecheck, tests, lint and the inventory build **as parallel tool calls in one message** — they are independent, and together they cost the slowest one instead of the sum. Report the actual command output. If something fails, fix it — do not report a green build you did not see.
 
 Templates live in `${CLAUDE_PLUGIN_ROOT}/templates/`. Copy and adapt them rather than writing files from memory — they are the tested versions.
 

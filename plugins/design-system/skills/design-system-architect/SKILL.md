@@ -27,7 +27,7 @@ You are standing up a design system that must serve **two consumers at once**: t
 
 ## Step 1 — Survey before you ask
 
-Do this before the first question. Every fact you find here is a question you do not have to ask, and a wrong assumption you do not get to make.
+Do this before the first question. Every fact you find here is a question you do not have to ask, and a wrong assumption you do not get to make. Run the probes as **one batched shell call**, not five round-trips — none depends on another's output.
 
 ```bash
 cat package.json                      # react version, package manager, workspaces, existing deps
@@ -79,25 +79,42 @@ Record the *why*, not just the what: a `rationale` field per decision. Two years
 
 ## Step 4 — Build order
 
-Each step is a skill. Invoke it; don't improvise from memory. **The order matters** — every step consumes the previous one's output.
+Each step is a skill. Invoke it; don't improvise from memory. The spine is serial — every step consumes the previous one's output — but the widest step, the reference components, **fans out to parallel subagents**. Built inline and one after another, the three components dominate init wall-clock *and* fill the conversation with every file they touch, so the later steps run in a heavy, slow context. Subagents fix both.
+
+**Serial spine — each step feeds the next:**
 
 1. **`design-tokens`** — DTCG sources, three tiers, light/dark, the build script, the contrast gate. Nothing can be styled until this exists.
 2. **`css-systems`** — wire the token output into the chosen CSS system so `color.bg.accent` is reachable the idiomatic way (a Tailwind `@theme` block, a vanilla-extract contract, a StyleX `defineVars`, a Panda preset, a CSS var sheet).
-3. **`primitive-libraries`** + **`component-api-design`** — install the primitive layer and build the reference components. Build **exactly three first**: `Button` (variants, sizes, states, icon slots), `TextField` (label/description/error, controlled + uncontrolled, form integration), `Dialog` (portal, focus trap, scroll lock, animation). Those three exercise every hard problem in the system — polymorphism, forms, portals, focus, motion. Get them right and the rest are variations. Get them wrong and you rewrite fifty components.
-4. **`motion-system`** — motion tokens, the reduced-motion strategy, the animation primitives the components share.
-5. **`component-testing`** — the behavioural contract suite. Write it against the three reference components so every later component inherits the pattern.
-6. **`design-system-linting`** — the enforcement layer: token rules, a11y rules, import boundaries.
-7. **`component-inventory`** — the registry generator, then the site that reads it, then `AGENTS.md` (also generated from the registry).
-8. **`packaging-distribution`** — only if the brief says package.
+3. **`motion-system`** — motion tokens, the reduced-motion strategy, the shared animation primitives. This runs *before* the components deliberately: `Dialog` animates on day one, so the motion tokens and reduced-motion pattern must already exist for its author to consume.
+4. **Install the primitive layer and scaffold the shared harness** — install the chosen primitive package, copy the test harness (`${CLAUDE_PLUGIN_ROOT}/templates/testing/vitest.config.ts`, `vitest.setup.ts`) and the lint configs once, now, so the parallel authors below never race to create them.
 
-Stop and show the user after step 3. Three real components in their colours is the moment they can tell you it's wrong — and it is much cheaper to hear that then than after fifty.
+**Fan out — three `ds-component-author` subagents, dispatched in a single message:**
+
+- `Button` — variants, sizes, states, icon slots
+- `TextField` — label/description/error, controlled + uncontrolled, form integration
+- `Dialog` — portal, focus trap, scroll lock, animation
+
+Those three exercise every hard problem in the system — polymorphism, forms, portals, focus, motion. Get them right and the rest are variations. Get them wrong and you rewrite fifty components. They are **independent of each other** once tokens, CSS wiring and motion exist — each writes only its own directory, contract test and `.meta.json` — so build them concurrently. Tell each agent explicitly: the harness and configs already exist; consult `component-api-design`, `primitive-libraries`, `css-systems` and `component-testing` as it works; and **do not regenerate the registry** — concurrent regens race on writing `registry.json`. When all three return, the parent runs the registry build once.
+
+Stop and show the user here. Three real components in their colours is the moment they can tell you it's wrong — and it is much cheaper to hear that then than after fifty.
+
+**Serial tail:**
+
+5. **`design-system-linting`** — the enforcement layer: token rules, a11y rules, import boundaries.
+6. **`component-inventory`** — the registry generator, then the site that reads it, then `AGENTS.md` (also generated from the registry). Independent of step 5 (lint reads the generated token file, inventory reads the registry) — run them in either order, or as two parallel subagents if the components came back clean.
+7. **`packaging-distribution`** — only if the brief says package.
 
 ## Step 5 — Verify, then report
 
 Run these and paste real output. A design system that does not build is worse than none, because people will work around it and never come back.
 
 ```bash
-npm run tokens        # token build + contrast gate
+npm run tokens        # first, alone — everything else reads its output (it takes well under a second)
+```
+
+Then the remaining four **in parallel — one message, four tool calls**. They are independent read-only checks; run serially they cost the sum of a typecheck, a test run, a lint pass and a Vite build, run together they cost the slowest one:
+
+```bash
 npx tsc --noEmit      # types
 npm test              # behaviour + a11y
 npm run lint          # including the DS rules
