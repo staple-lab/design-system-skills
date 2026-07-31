@@ -1,0 +1,23 @@
+{
+  "$comment": "Input fixture for variables-to-dtcg.mjs — the REST /v1/files/:key/variables/local shape. The check script converts this and runs the token build over the result, so the values are chosen to PASS the contrast gate (accent 600 carries white at 4.66:1).",
+  "meta": {
+    "variableCollections": {
+      "VC:1": { "id": "VC:1", "name": "Primitives", "defaultModeId": "1:0", "modes": [{ "modeId": "1:0", "name": "Value" }] },
+      "VC:2": { "id": "VC:2", "name": "Semantic", "defaultModeId": "2:0", "modes": [{ "modeId": "2:0", "name": "Light" }, { "modeId": "2:1", "name": "Dark" }] }
+    },
+    "variables": {
+      "V:1": { "id": "V:1", "name": "color/accent/600", "resolvedType": "COLOR", "variableCollectionId": "VC:1", "description": "Brand primary. White text clears 4.66:1.", "valuesByMode": { "1:0": { "r": 0.1451, "g": 0.3882, "b": 0.9216, "a": 1 } } },
+      "V:2": { "id": "V:2", "name": "color/neutral/50", "resolvedType": "COLOR", "variableCollectionId": "VC:1", "valuesByMode": { "1:0": { "r": 0.9804, "g": 0.9804, "b": 0.9882, "a": 1 } } },
+      "V:3": { "id": "V:3", "name": "color/neutral/950", "resolvedType": "COLOR", "variableCollectionId": "VC:1", "valuesByMode": { "1:0": { "r": 0.0784, "g": 0.0784, "b": 0.0941, "a": 1 } } },
+      "V:4": { "id": "V:4", "name": "color/white", "resolvedType": "COLOR", "variableCollectionId": "VC:1", "valuesByMode": { "1:0": { "r": 1, "g": 1, "b": 1, "a": 1 } } },
+      "V:5": { "id": "V:5", "name": "space/4", "resolvedType": "FLOAT", "variableCollectionId": "VC:1", "valuesByMode": { "1:0": 16 } },
+      "V:6": { "id": "V:6", "name": "z/modal", "resolvedType": "FLOAT", "variableCollectionId": "VC:1", "valuesByMode": { "1:0": 1300 } },
+      "V:7": { "id": "V:7", "name": "Feature Flags/new nav", "resolvedType": "BOOLEAN", "variableCollectionId": "VC:1", "valuesByMode": { "1:0": true } },
+      "V:10": { "id": "V:10", "name": "color/bg/accent", "resolvedType": "COLOR", "variableCollectionId": "VC:2", "valuesByMode": { "2:0": { "type": "VARIABLE_ALIAS", "id": "V:1" }, "2:1": { "type": "VARIABLE_ALIAS", "id": "V:1" } } },
+      "V:11": { "id": "V:11", "name": "color/fg/on-accent", "resolvedType": "COLOR", "variableCollectionId": "VC:2", "valuesByMode": { "2:0": { "type": "VARIABLE_ALIAS", "id": "V:4" }, "2:1": { "type": "VARIABLE_ALIAS", "id": "V:4" } } },
+      "V:12": { "id": "V:12", "name": "color/bg/default", "resolvedType": "COLOR", "variableCollectionId": "VC:2", "valuesByMode": { "2:0": { "type": "VARIABLE_ALIAS", "id": "V:2" }, "2:1": { "type": "VARIABLE_ALIAS", "id": "V:3" } } },
+      "V:13": { "id": "V:13", "name": "color/fg/default", "resolvedType": "COLOR", "variableCollectionId": "VC:2", "valuesByMode": { "2:0": { "type": "VARIABLE_ALIAS", "id": "V:3" }, "2:1": { "type": "VARIABLE_ALIAS", "id": "V:2" } } },
+      "V:14": { "id": "V:14", "name": "color/bg/surface", "resolvedType": "COLOR", "variableCollectionId": "VC:2", "valuesByMode": { "2:0": { "type": "VARIABLE_ALIAS", "id": "V:4" }, "2:1": { "type": "VARIABLE_ALIAS", "id": "V:3" } } }
+    }
+  }
+}

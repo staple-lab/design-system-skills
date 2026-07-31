@@ -15,8 +15,8 @@ agents) and **executable templates**. Those two categories have different rules.
 .claude-plugin/marketplace.json      the marketplace manifest
 plugins/design-system/
   .claude-plugin/plugin.json         the plugin manifest
-  commands/*.md                      7 slash commands → /design-system:<name>
-  skills/<name>/SKILL.md             12 skills (+ references/ where a skill needs depth)
+  commands/*.md                      8 slash commands → /design-system:<name>
+  skills/<name>/SKILL.md             13 skills (+ references/ where a skill needs depth)
   agents/*.md                        2 subagent definitions
   templates/                         the scaffolding the skills copy into user projects
 ```

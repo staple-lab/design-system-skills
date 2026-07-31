@@ -16,6 +16,9 @@ inventory/     the catalogue site — Vite + React, reads registry.json and toke
 package/       package.json for a published system, and the CI workflow
 adopt/         infer-tokens.mjs — brownfield adoption: scan hardcoded values, propose
                ramps from the codebase's own hues, emit the codemod's value map
+figma/         variables-to-dtcg.mjs (Figma variables → token files, --diff drift
+               check) + registry-to-codeconnect.mjs (Code Connect files from the
+               registry) + the variables fixture
 ```
 
 ## The four scripts

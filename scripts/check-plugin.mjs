@@ -272,6 +272,32 @@ section('Template smoke runs');
       }
     }
 
+    // Figma bridge: fixture → DTCG → token build (gate included) → clean --diff,
+    // and Code Connect generation from the scratch registry.
+    {
+      const proj = join(scratch, 'figma-proj');
+      mkdirSync(join(proj, 'tokens'), { recursive: true });
+      cpSync(join(scratch, 'tokens', 'build.mjs'), join(proj, 'tokens', 'build.mjs'));
+      writeFileSync(join(proj, 'design-system.config.json'),
+        JSON.stringify({ stack: { cssSystem: 'css-modules' }, tokens: { prefix: 'ds' } }));
+      const fixture = join(scratch, 'figma', 'fixtures', 'variables.example.json');
+      const conv = join(scratch, 'figma', 'variables-to-dtcg.mjs');
+      const r9 = spawnSync(process.execPath, [conv, fixture, '--out', 'tokens'], { cwd: proj, encoding: 'utf8' });
+      const r10 = spawnSync(process.execPath, ['tokens/build.mjs'], { cwd: proj, encoding: 'utf8' });
+      const r11 = spawnSync(process.execPath, [conv, fixture, '--out', 'tokens', '--diff'], { cwd: proj, encoding: 'utf8' });
+      if (r9.status !== 0) fail(`variables-to-dtcg.mjs failed on the fixture:\n${r9.stderr || r9.stdout}`);
+      else if (r10.status !== 0) fail(`token build rejected the converted fixture:\n${r10.stderr || r10.stdout}`);
+      else if (r11.status !== 0) fail(`--diff reports drift right after its own conversion:\n${r11.stdout}`);
+      else ok('figma fixture round-trip: convert → build + gate → clean --diff');
+
+      const r12 = spawnSync(process.execPath, [join(scratch, 'figma', 'registry-to-codeconnect.mjs')],
+        { cwd: scratch, encoding: 'utf8' });
+      if (r12.status !== 0) fail(`registry-to-codeconnect.mjs failed:\n${r12.stderr || r12.stdout}`);
+      else if (!existsSync(join(scratch, 'figma', 'connect', 'Select.figma.tsx')))
+        fail('registry-to-codeconnect.mjs did not emit Select.figma.tsx');
+      else ok('Code Connect files generate from the registry');
+    }
+
     // Importer failure mode: without tailwindcss installed it must die with instructions.
     // (The positive path needs the package installed — CI covers it.)
     const r6 = run(['tokens/import-palette.mjs', '--source', 'tailwind', '--accent', 'orange', '--neutral', 'slate']);
