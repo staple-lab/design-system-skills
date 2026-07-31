@@ -1,0 +1,29 @@
+/* Fixture for adopt/infer-tokens.mjs — deliberate drift with known values.
+   The check script asserts deterministic clustering over this file; keep the
+   values stable (tests reference them). */
+
+.hero {
+  background: #2563eb;            /* blue — accent bucket */
+  color: #ffffff;
+  padding: 16px 24px;             /* on-grid → space.4 / space.6, exact */
+  margin-bottom: 17px;            /* off-grid → snaps to space.4 */
+  border-radius: 8px;
+  z-index: 9999;                  /* stacking-war artefact → z scale note */
+}
+
+.alert-danger {
+  background: rgb(220, 38, 38);   /* red — danger bucket */
+  color: hsl(0, 0%, 100%);
+  transition: opacity 200ms ease; /* → duration.fast/normal snap */
+}
+
+.badge-success {
+  background: #16a34a;            /* green — success bucket */
+  padding: 4px 8px;               /* space.1 / space.2, exact */
+}
+
+.banner-warning {
+  border-left: 4px solid #f59e0b; /* amber — warning bucket */
+  color: #6b7280;                 /* gray — neutral bucket (low chroma) */
+  font-size: 13px;                /* off-grid dimension */
+}

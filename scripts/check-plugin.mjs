@@ -26,7 +26,7 @@
  * Exits non-zero if any check fails.
  */
 
-import { readFileSync, readdirSync, statSync, existsSync, mkdtempSync, rmSync, cpSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, existsSync, mkdtempSync, mkdirSync, rmSync, cpSync, writeFileSync } from 'node:fs';
 import { join, dirname, basename, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -232,6 +232,44 @@ section('Template smoke runs');
         }
         if (names.includes('Select')) ok('registry extracts the compound templates (Select/Table/Toast)');
       } catch (e) { fail(`could not read scratch registry.json: ${e.message}`); }
+    }
+
+    // Adopt inference: deterministic clustering over the committed fixture, and
+    // the inferred ramps must clear the contrast gate end to end.
+    {
+      const proj = join(scratch, 'adopt-proj');
+      mkdirSync(join(proj, 'src'), { recursive: true });
+      cpSync(join(scratch, 'adopt', 'fixtures'), join(proj, 'src'), { recursive: true });
+      cpSync(join(scratch, 'tokens'), join(proj, 'tokens'), { recursive: true });
+      writeFileSync(join(proj, 'design-system.config.json'),
+        JSON.stringify({ stack: { cssSystem: 'css-modules' }, tokens: { prefix: 'ds' } }));
+      const r7 = spawnSync(process.execPath, [join(scratch, 'adopt', 'infer-tokens.mjs'), '--dir', proj, '--write'],
+        { cwd: proj, encoding: 'utf8' });
+      if (r7.status !== 0) fail(`infer-tokens.mjs failed on the fixture:\n${r7.stderr || r7.stdout}`);
+      else {
+        try {
+          const vm = JSON.parse(readFileSync(join(proj, '.design-system', 'adopt', 'value-map.json'), 'utf8'));
+          const byLit = new Map(vm.entries.map((e) => [`${e.kind}:${e.literal}`, e]));
+          const expect = [
+            ['color:#2563eb', 'color.accent.600', 'exact'],
+            ['color:#16a34a', 'color.success.600', null],
+            ['dimension:16px', 'space.4', 'exact'],
+            ['dimension:17px', 'space.4', 'snap'],
+            ['z-index:9999', null, null], // present, token is judgement
+          ];
+          for (const [key, token, conf] of expect) {
+            const e = byLit.get(key);
+            if (!e) fail(`value-map missing ${key}`);
+            else {
+              if (token && e.token !== token) fail(`value-map ${key} → ${e.token}, expected ${token}`);
+              if (conf && e.confidence !== conf) fail(`value-map ${key} confidence ${e.confidence}, expected ${conf}`);
+            }
+          }
+          const r8 = spawnSync(process.execPath, ['tokens/build.mjs'], { cwd: proj, encoding: 'utf8' });
+          if (r8.status !== 0) fail(`contrast gate rejected the fixture-inferred ramps:\n${r8.stderr || r8.stdout}`);
+          else ok('adopt inference: deterministic value map, inferred ramps clear the gate');
+        } catch (e) { fail(`adopt smoke: ${e.message}`); }
+      }
     }
 
     // Importer failure mode: without tailwindcss installed it must die with instructions.

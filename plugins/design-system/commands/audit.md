@@ -21,3 +21,7 @@ Run the six checks below **as parallel subagents dispatched in a single message*
 Deliver a report ranked by **cost to fix × blast radius**, with a concrete migration order — batch 1 is the mechanical codemod-able stuff, batch 2 the judgement calls. Offer to write the codemod for batch 1.
 
 Write the report to `.design-system/audit-<YYYY-MM-DD>.md` so the next audit can diff against it, and state the top-line numbers in chat.
+
+If the numbers warrant action, point at `/design-system:adopt` — it consumes this report
+as its baseline and turns it into an inferred token layer, a batched migration plan and
+the mechanical rewrites. Audit measures; adopt moves.

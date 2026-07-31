@@ -14,9 +14,11 @@ testing/       the contract test suite, vitest config and jsdom setup
 lint/          eslint-plugin-design-system.mjs (4 rules), eslint + stylelint config
 inventory/     the catalogue site — Vite + React, reads registry.json and tokens.json
 package/       package.json for a published system, and the CI workflow
+adopt/         infer-tokens.mjs — brownfield adoption: scan hardcoded values, propose
+               ramps from the codebase's own hues, emit the codemod's value map
 ```
 
-## The three scripts
+## The four scripts
 
 All are **dependency-free Node ESM**, on purpose: they run in CI, in a pre-commit hook, and on a designer's machine that has never run `npm install`. (The palette importer reads palette *data* from the project's own `tailwindcss` / `@radix-ui/colors` install, but needs nothing installed to run and fails with instructions when the source package is absent.)
 
@@ -48,6 +50,21 @@ node tokens/import-palette.mjs --source radix --accent indigo --neutral slate
 ```
 
 Rewrites the five colour ramps in `tokens/primitive.tokens.json` from the locally installed `tailwindcss` (v4) or `@radix-ui/colors`, mapped onto the same 50–1000 steps the generated ramps use — the mapping tables and rationale live in the design-tokens skill's `references/scales.md`. Only the primitive tier changes; run `node tokens/build.mjs` afterwards so the contrast gate validates the imported palette.
+
+### `adopt/infer-tokens.mjs`
+
+```bash
+node adopt/infer-tokens.mjs                 # dry run: report + value-map.json
+node adopt/infer-tokens.mjs --write         # also emit tokens/primitive.tokens.json
+node adopt/infer-tokens.mjs --rewrite-css   # rewrite EXACT colour literals in CSS
+```
+
+Scans CSS/TSX for hardcoded colours, dimensions, durations and z-indexes; clusters
+colours in OKLCH and proposes the five ramps from the codebase's own hues (neutral gets
+its own L column — the 500/600 dual text constraints); snaps dimensions to the 4px grid.
+Writes `.design-system/adopt/value-map.json`, the input to the `value-to-token` codemod.
+Detects Tailwind projects and defers colours to `import-palette.mjs`. After `--write`,
+run `tokens/build.mjs` — the contrast gate is the arbiter of the inferred ramps.
 
 ### `registry/build-registry.mjs`
 
