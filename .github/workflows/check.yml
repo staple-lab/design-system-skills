@@ -1,0 +1,56 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Structure, frontmatter, manifests, path resolution, template smoke
+      # runs (token engine x5 CSS systems, negative contrast case, registry),
+      # and — once typescript is installed below — the TSX parse gate is
+      # exercised in the second run.
+      - name: Self-check (dependency-free)
+        run: node scripts/check-plugin.mjs
+
+      - name: Palette importer positive path
+        run: |
+          SCRATCH="$(mktemp -d)"
+          cp -R plugins/design-system/templates/. "$SCRATCH"
+          cd "$SCRATCH"
+          npm init -y > /dev/null
+          npm i --no-save --no-audit --no-fund tailwindcss @radix-ui/colors typescript > /dev/null
+          echo '{"stack":{"cssSystem":"css-modules"},"paths":{"components":"components"}}' > design-system.config.json
+          cp tokens/primitive.tokens.json /tmp/primitive.orig.json
+
+          # Tailwind import → the contrast gate must validate the result
+          node tokens/import-palette.mjs --source tailwind --accent blue --neutral slate --dry-run
+          node tokens/import-palette.mjs --source tailwind --accent blue --neutral slate
+          node tokens/build.mjs
+
+          # Radix import, from fresh primitives
+          cp /tmp/primitive.orig.json tokens/primitive.tokens.json
+          node tokens/import-palette.mjs --source radix --accent indigo --neutral slate
+          node tokens/build.mjs
+
+          # A light-peaking accent must FAIL the gate and name the vendor step —
+          # that failure is designed behavior, so CI asserts it stays.
+          cp /tmp/primitive.orig.json tokens/primitive.tokens.json
+          node tokens/import-palette.mjs --source tailwind --accent orange --neutral slate
+          if node tokens/build.mjs > gate.log 2>&1; then
+            echo "expected the gate to fail on tailwind orange"; exit 1
+          fi
+          grep -q "orange-600" gate.log
+
+      - name: Self-check with tsc (TSX parse gate active)
+        run: |
+          npm i --no-save --no-audit --no-fund typescript > /dev/null
+          PATH="$PWD/node_modules/.bin:$PATH" node scripts/check-plugin.mjs

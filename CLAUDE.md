@@ -16,7 +16,7 @@ agents) and **executable templates**. Those two categories have different rules.
 plugins/design-system/
   .claude-plugin/plugin.json         the plugin manifest
   commands/*.md                      6 slash commands → /design-system:<name>
-  skills/<name>/SKILL.md             10 skills (+ references/ where a skill needs depth)
+  skills/<name>/SKILL.md             11 skills (+ references/ where a skill needs depth)
   agents/*.md                        2 subagent definitions
   templates/                         the scaffolding the skills copy into user projects
 ```
@@ -103,9 +103,15 @@ have had real bugs fixed in them that a fresh rewrite would reintroduce.
 ## Verifying a change
 
 ```bash
-# structure + frontmatter + manifest consistency + template-path resolution
-# (the check script in the session notes; re-run it after adding a skill or command)
+node scripts/check-plugin.mjs
 ```
+
+One script, run it after any change: frontmatter + manifest consistency, template-path
+resolution (including the inverse — a reference file mentioned by nothing is a failure),
+and the template smoke runs from the section above (token engine × 5 CSS systems, the
+negative contrast case, registry build, importer failure mode, TSX parse gate when `tsc`
+is on PATH). CI (`.github/workflows/check.yml`) runs it on every push, plus the palette
+importer's positive path against real `tailwindcss` / `@radix-ui/colors` installs.
 
 Every `${CLAUDE_PLUGIN_ROOT}` path referenced in a skill or command must exist. A dangling
 reference fails silently at use time, which is the worst possible time.
