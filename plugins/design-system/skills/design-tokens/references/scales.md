@@ -63,7 +63,8 @@ Focus rings need 3:1 against **both** the component and the page behind it — t
 | Ours | Tailwind | Why |
 |---|---|---|
 | 50–400 | 50–400, 1:1 | The light halves agree. |
-| 500, 600 | OKLCH midpoints of 400/500 and 500/600 | These two steps carry a **dual text constraint** — `fg.subtle` ≥3:1 on near-white in light *and* `fg.muted` ≥4.5:1 on near-black in dark (and vice versa) — that lands *between* Tailwind's rungs. Interpolated, never extrapolated. |
+| 500 | OKLCH midpoint of 400/500 | Carries a **dual text constraint** — `fg.subtle` ≥3:1 on near-white in light *and* `fg.muted` ≥4.5:1 on near-black in dark — that lands *between* Tailwind's rungs (measured for slate: 3.35 / 5.09). |
+| 600 | 500, as-is | The mirror constraint (`fg.muted` ≥4.5:1 on near-white, `fg.subtle` ≥3:1 on near-black) lands *on* Tailwind's 500 rung (slate: 4.55 / 3.74). The 500/600 midpoint misses the dark side at 2.98:1 — measured, which is how this row was found. |
 | 700–1000 | 600–950, shifted one slot down | Where the dark halves re-align: tw 600–950 match the recipe's 700–1000 within ~0.01 L. |
 
 **Radix** — role-mapped using Radix's documented step semantics (radix-ui.com, "understanding the scale"), not position-mapped. Our 50–600 take light-scale steps whose documented role matches the slot's job; our 700–1000 take `*Dark`-scale steps, so the dark theme — which reads the ramp's dark end for surfaces and interaction states — renders Radix's dark-appearance values:
@@ -76,12 +77,14 @@ Focus rings need 3:1 against **both** the component and the page behind it — t
 | 300 | light 5 | active / selected UI element background |
 | 400 | light 7 | UI element border and focus rings |
 | 500 | light 9 | solid backgrounds |
-| 600 | light 11 | low-contrast text |
+| 600 | light 11 (neutral: dark 9) | low-contrast text |
 | 700 | dark 5 | active / selected UI element background |
 | 800 | dark 4 | hovered UI element background |
 | 900 | dark 3 | UI element background |
 | 950 | dark 2 | subtle background |
 | 1000 | dark 1 | app background |
+
+The neutral ramp's 600 slot is the one exception to pure role-mapping, for the same reason Tailwind's neutral 500/600 are interpolated: it carries a dual text constraint (light `fg.muted` ≥4.5:1 on near-white *and* dark `fg.subtle` ≥3:1 on near-black) that falls between the light scale's rungs — light 11 misses the dark side (slate: 2.96:1), light 10 misses the light side (3.69:1). The Dark scale's step 9 sits exactly in the window: measured 5.00/3.43 for slate, and the same holds within ±0.1 across all six Radix neutrals (gray, mauve, sage, olive, sand).
 
 Note what the Radix mapping gives up: Radix's light scale tops out at "high-contrast text" (step 12, unused here because our 700+ slots need dark-appearance values), so text steps 700/900 in a Radix-imported ramp are dark-scale *backgrounds* doing double duty. The gate decides whether that holds — measured, not assumed, same as everything else on this page.
 

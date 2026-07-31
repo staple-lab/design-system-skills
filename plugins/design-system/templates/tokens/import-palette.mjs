@@ -150,7 +150,13 @@ function loadTailwind() {
           ramp[s] = { $value: tw[s], $description: `Tailwind ${scaleName}-${s}` };
         }
         ramp['500'] = mid('400', '500', 'dual text constraint falls between Tailwind rungs');
-        ramp['600'] = mid('500', '600', 'dual text constraint falls between Tailwind rungs');
+        // The 600 slot's dual constraint (light fg.muted ≥4.5:1 on tw 50 AND dark
+        // fg.subtle ≥3:1 on tw 900) is satisfied by tw 500 itself (slate: 4.55 /
+        // 3.74, measured) — the 500/600 midpoint misses the dark side at 2.98:1.
+        ramp['600'] = {
+          $value: tw['500'],
+          $description: `Tailwind ${scaleName}-500 (the 600 slot's dual text constraint lands on this rung, not between 500/600)`,
+        };
         const shifted = { 700: '600', 800: '700', 900: '800', 950: '900', 1000: '950' };
         for (const [ours, twStep] of Object.entries(shifted)) {
           ramp[ours] = {
@@ -158,7 +164,7 @@ function loadTailwind() {
             $description: `Tailwind ${scaleName}-${twStep} (neutral dark half shifts one slot — Tailwind's runs a rung darker than the ramp recipe)`,
           };
         }
-        return { ramp, note: `${scaleName} 50–950, dark half shifted, 500/600 interpolated` };
+        return { ramp, note: `${scaleName} 50–950, dark half shifted, 500 interpolated, 600 ← ${scaleName}-500` };
       }
 
       // Chromatic ramps: 50–900 map 1:1 — same nominal steps, same conventions
@@ -216,20 +222,35 @@ function loadRadix() {
   return {
     label: `Radix Colors ${version}`,
     names,
-    ramp(scaleName) {
+    ramp(scaleName, role) {
       const light = scales[scaleName];
       const dark = scales[`${scaleName}Dark`];
       if (!light || !dark)
         die(`Radix has no "${scaleName}" light+dark scale pair. Available: ${names.join(', ')}`);
       const ramp = {};
-      for (const [ours, appearance, step, role] of RADIX_MAP) {
+      for (const [ours, appearance, step, radixRole] of RADIX_MAP) {
         const scale = appearance === 'dark' ? dark : light;
         const value = scale[`${scaleName}${step}`];
         if (!value) die(`Radix ${scaleName}${appearance === 'dark' ? 'Dark' : ''} is missing step ${step}`);
         ramp[ours] = {
           $value: value,
-          $description: `Radix ${scaleName}${appearance === 'dark' ? 'Dark' : ''} ${step} — ${role}`,
+          $description: `Radix ${scaleName}${appearance === 'dark' ? 'Dark' : ''} ${step} — ${radixRole}`,
         };
+      }
+      if (role === 'neutral') {
+        // The 600 slot carries a dual text constraint (light fg.muted ≥4.5:1 on
+        // near-white AND dark fg.subtle ≥3:1 on near-black). Radix's light scale
+        // has no step in that window — light 11 misses the dark side (slate:
+        // 2.96:1), light 10 misses the light side (3.69:1) — but the Dark
+        // scale's step 9 sits exactly in it (slate: 5.00 / 3.43; holds across
+        // all six Radix neutrals). See scales.md, "Importing vendor palettes".
+        const value = dark[`${scaleName}9`];
+        if (!value) die(`Radix ${scaleName}Dark is missing step 9`);
+        ramp['600'] = {
+          $value: value,
+          $description: `Radix ${scaleName}Dark 9 — neutral 600 dual text constraint falls between the light scale's rungs`,
+        };
+        return { ramp, note: `${scaleName} light 1–9 + ${scaleName}Dark 1–5 + Dark 9 for the 600 slot` };
       }
       return { ramp, note: `${scaleName} light 1–11 + ${scaleName}Dark 1–5` };
     },
