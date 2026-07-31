@@ -6,6 +6,7 @@ These are the **tested versions**. Copy and adapt them rather than writing equiv
 config/        design-system.config.json — the brief, plus its JSON schema
 tokens/        DTCG sources (primitive · semantic.light · semantic.dark · component)
                + build.mjs — the token engine and contrast gate
+               + generate-ramps.mjs — brand hex → the five OKLCH ramps
                + import-palette.mjs — rewrite the primitive ramps from Tailwind/Radix
 registry/      registry.schema.json + build-registry.mjs — the catalogue generator
 components/    reference components: Button (Tailwind/CVA and CSS Modules forms), Icon,
@@ -21,7 +22,7 @@ figma/         variables-to-dtcg.mjs (Figma variables → token files, --diff dr
                registry) + the variables fixture
 ```
 
-## The four scripts
+## The five scripts
 
 All are **dependency-free Node ESM**, on purpose: they run in CI, in a pre-commit hook, and on a designer's machine that has never run `npm install`. (The palette importer reads palette *data* from the project's own `tailwindcss` / `@radix-ui/colors` install, but needs nothing installed to run and fails with instructions when the source package is absent.)
 
@@ -44,6 +45,20 @@ Reads `tokens/*.tokens.json`, resolves `{references}` per theme, and emits to `t
 It also runs the **contrast gate**: every `color.fg.*` paired against `color.bg.*` by naming convention (`fg.on-accent` ↔ `bg.accent`), in every theme. Failures exit non-zero with the measured and required ratios. Per-token overrides live in `$extensions["design-system"].contrast` — `{ min: 3 }` for decorative foregrounds, `{ skip: true }` for disabled text, which WCAG exempts.
 
 It implements OKLCH → sRGB conversion so ramps can be authored perceptually and still be checked numerically.
+
+### `tokens/generate-ramps.mjs`
+
+```bash
+node tokens/generate-ramps.mjs --accent "#7C3AED" [--dry-run]
+node tokens/generate-ramps.mjs --accent "#0B5FFF" --success 150 --warning 80 --danger 25
+```
+
+One brand hex → all five ramps, per the recipe in the design-tokens skill's
+`references/scales.md`: the hex lands **verbatim** at its nearest step, chroma peaks
+per hue, the neutral uses its own L column (the 500/600 dual text constraints).
+Contrast is measured after generation — a light-peaking hue (greens, ambers) gets a
+finding naming its real fill step ("point `color.bg.accent` at `{color.accent.700}`")
+instead of a distorted ramp. Deterministic: same hex in, byte-identical file out.
 
 ### `tokens/import-palette.mjs`
 

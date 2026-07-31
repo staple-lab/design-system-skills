@@ -27,7 +27,9 @@ These are the values shipped in `templates/tokens/primitive.tokens.json`, and th
 
 Chroma is expressed relative to the peak because **max chroma varies by hue** — you cannot use the same absolute chroma for yellow and blue and stay in gamut. Yellows and greens peak far lower in chroma at high lightness than blues and purples do, and they are also intrinsically more luminous: at the same OKLCH lightness, green carries ~9% more relative luminance than a neutral and red ~12% less. That is why the green ramp's solid fill lands at step 700 while blue's lands at 600 — the fill step is chosen by contrast, not by position. Clamp to sRGB gamut unless the target is P3-only.
 
-Generating from one brand hex:
+Generating from one brand hex (`tokens/generate-ramps.mjs` implements exactly this —
+including placing the brand hex verbatim at its step, and reporting a light-peaking
+hue's fill step with measured ratios instead of distorting the ramp to force 600):
 1. Convert the brand colour to OKLCH. Its `L` tells you which step it *is* — if `L ≈ 0.62` it is your 600; if it is much lighter, it is a 400 or 500 and the solid fills must be derived darker.
 2. Keep `H` constant across the ramp, or shift it deliberately. A small hue shift toward yellow in light steps and toward blue in dark steps mimics how pigment behaves and reads as more natural; keep the total drift under ~15°.
 3. Set `L` per the table, scale `C` per the table, clamp to gamut.

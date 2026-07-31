@@ -234,6 +234,42 @@ section('Template smoke runs');
       } catch (e) { fail(`could not read scratch registry.json: ${e.message}`); }
     }
 
+    // Ramp generator: deterministic, gate-passing on a mid-hue brand, and the
+    // light-peaking finding + documented re-point path must work end to end.
+    {
+      const orig = readFileSync(join(scratch, 'tokens', 'primitive.tokens.json'), 'utf8');
+      const g1 = run(['tokens/generate-ramps.mjs', '--accent', '#7C3AED']);
+      const purple1 = readFileSync(join(scratch, 'tokens', 'primitive.tokens.json'), 'utf8');
+      writeFileSync(join(scratch, 'tokens', 'primitive.tokens.json'), orig);
+      run(['tokens/generate-ramps.mjs', '--accent', '#7C3AED']);
+      const purple2 = readFileSync(join(scratch, 'tokens', 'primitive.tokens.json'), 'utf8');
+      const gBuild = run(['tokens/build.mjs']);
+      if (g1.status !== 0) fail(`generate-ramps.mjs failed:\n${g1.stderr || g1.stdout}`);
+      else if (purple1 !== purple2) fail('generate-ramps.mjs is not deterministic — same hex produced different files');
+      else if (!/verbatim at 600/.test(g1.stdout)) fail('brand hex #7C3AED did not land verbatim at step 600');
+      else if (gBuild.status !== 0) fail(`contrast gate rejected generated purple ramps:\n${gBuild.stderr || gBuild.stdout}`);
+      else ok('generate-ramps: deterministic, brand hex verbatim, gate passes');
+
+      writeFileSync(join(scratch, 'tokens', 'primitive.tokens.json'), orig);
+      const g2 = run(['tokens/generate-ramps.mjs', '--accent', '#16A34A']);
+      const gFail = run(['tokens/build.mjs']);
+      if (!/accent: white on 600 .* light-peaking/.test(g2.stdout)) fail('green accent did not produce the light-peaking finding');
+      else if (gFail.status === 0) fail('gate passed a light-peaking accent at 600 — it should fail until the semantic re-point');
+      else {
+        // The documented fix: re-point bg.accent (and its states) one step darker.
+        for (const f of ['semantic.light.tokens.json', 'semantic.dark.tokens.json']) {
+          const p = join(scratch, 'tokens', f);
+          writeFileSync(p, readFileSync(p, 'utf8').replaceAll('{color.accent.600}', '{color.accent.700}'));
+        }
+        const gFixed = run(['tokens/build.mjs']);
+        if (gFixed.status !== 0) fail(`gate still fails after the documented re-point:\n${gFixed.stderr || gFixed.stdout}`);
+        else ok('generate-ramps: light-peaking finding printed, documented re-point clears the gate');
+      }
+      // restore pristine sources for the checks that follow
+      cpSync(join(TEMPLATES, 'tokens'), join(scratch, 'tokens'), { recursive: true });
+      run(['tokens/build.mjs']);
+    }
+
     // Adopt inference: deterministic clustering over the committed fixture, and
     // the inferred ramps must clear the contrast gate end to end.
     {

@@ -82,7 +82,15 @@ The grammar is an API, not a labelling convention — four tools parse it (the l
 
 ## The scales
 
-Read `references/scales.md` for the full construction method. In brief:
+Read `references/scales.md` for the full construction method. **Generating colour ramps
+from a brand hex is scripted** — `${CLAUDE_PLUGIN_ROOT}/templates/tokens/generate-ramps.mjs`
+implements the reference's recipe (brand hex verbatim at its nearest step, per-hue peak
+chroma, the neutral's own L column, contrast measured not assumed); run it instead of
+hand-computing sixty OKLCH values. Creating a whole token layer from nothing is the
+`/design-system:tokens` wizard's job — it interviews (colour source, type ratio,
+density), copies the templates, runs the right script and shows the CSS-system artifact.
+
+In brief:
 
 - **Colour** — build ramps in **OKLCH**, not HSL. HSL's lightness is not perceptual: `hsl(60 100% 50%)` (yellow) and `hsl(240 100% 50%)` (blue) claim the same lightness and differ by a factor of ~8 in perceived brightness, so an HSL ramp gives you steps that look evenly spaced in some hues and badly bunched in others. OKLCH lightness matches perception, so one ramp recipe works across every hue. 12 steps per ramp (a 50–950 scale) covers surfaces, borders, fills and text.
 - **Spacing** — a 4px base grid, geometric-ish: `0, 1, 2, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96`. Not every multiple of 4 — a scale with too many rungs is not a scale, it is permission.
