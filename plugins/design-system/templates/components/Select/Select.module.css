@@ -1,0 +1,259 @@
+/*
+ * Select, styled with CSS Modules against the token layer.
+ *
+ * Two anatomies meet here and each borrows an existing vocabulary rather than inventing
+ * one: the TRIGGER is TextField's field (control.height, border → focus ring), and the
+ * POPUP is Dialog's overlay surface (bg.surface, shadow.overlay, z.dropdown). Every value
+ * is a token — no hex, no magic px — which is what keeps a Select visually identical to
+ * the field it sits next to in a form.
+ */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-1);
+}
+
+.label {
+  font-family: var(--ds-type-label-font-family);
+  font-size: var(--ds-type-label-font-size);
+  font-weight: var(--ds-type-label-font-weight);
+  line-height: var(--ds-type-label-line-height);
+  color: var(--ds-color-fg-default);
+}
+
+.requiredMark {
+  color: var(--ds-color-fg-danger);
+  margin-inline-start: var(--ds-space-1);
+}
+
+/* --- trigger: TextField's field anatomy ----------------------------------- */
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-control-gap);
+
+  height: var(--ds-control-height-md);
+  padding-inline: var(--ds-control-padding-x-md); /* logical properties → free RTL */
+  background: var(--ds-color-bg-default);
+  border: var(--ds-border-width-sm) solid var(--ds-color-border-default);
+  border-radius: var(--ds-radius-md);
+
+  font-family: var(--ds-type-body-font-family);
+  font-size: var(--ds-type-body-font-size);
+  line-height: var(--ds-type-body-line-height);
+  color: var(--ds-color-fg-default);
+  text-align: start;
+  cursor: pointer;
+  user-select: none;
+
+  transition:
+    border-color var(--ds-duration-fast) var(--ds-easing-standard),
+    background-color var(--ds-duration-fast) var(--ds-easing-standard),
+    box-shadow var(--ds-duration-fast) var(--ds-easing-standard);
+}
+
+/* :focus-visible only — :focus fires on mouse click, and that is how focus styles get deleted. */
+.trigger:focus-visible {
+  outline: var(--ds-focus-ring-width) solid var(--ds-color-ring);
+  outline-offset: var(--ds-focus-ring-offset);
+  border-color: var(--ds-color-border-accent);
+}
+
+/* Muted while showing the placeholder — the styling hook is the data attribute, never a
+   class toggled from React state. */
+.trigger[data-placeholder] {
+  color: var(--ds-color-fg-muted);
+}
+
+/* Invalid shifts the border AND is always paired with error text in the describedby
+   chain — 3:1 contrast on a 1px border is not a message on its own. */
+.trigger[aria-invalid='true'] {
+  border-color: var(--ds-color-border-danger);
+}
+
+.trigger:disabled,
+.trigger[data-disabled] {
+  background: var(--ds-color-bg-disabled);
+  color: var(--ds-color-fg-disabled);
+  cursor: not-allowed;
+}
+
+/* size="sm" — md is the base class above, same convention as Button */
+.sm {
+  height: var(--ds-control-height-sm);
+  padding-inline: var(--ds-control-padding-x-sm);
+  font-size: var(--ds-type-body-sm-font-size);
+}
+
+.value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon {
+  flex-shrink: 0; /* icons in flex rows next to truncating text get squashed without it */
+  display: inline-flex;
+  color: var(--ds-color-fg-muted);
+}
+.icon svg {
+  width: 1em;
+  height: 1em;
+}
+
+/* --- popup: Dialog's overlay surface --------------------------------------- */
+
+/* z-index on the Positioner — the Popup inherits its stacking context. */
+.positioner {
+  z-index: var(--ds-z-dropdown);
+}
+
+.popup {
+  box-sizing: border-box;
+  /* Base UI exposes the trigger width as --anchor-width on the Positioner
+     (Radix: --radix-select-trigger-width). Unset, the rule is simply ignored. */
+  min-width: var(--anchor-width);
+  max-height: var(--available-height);
+  overflow-y: auto;
+
+  padding: var(--ds-space-1);
+  background: var(--ds-color-bg-surface);
+  border: var(--ds-border-width-sm) solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-radius-md);
+  box-shadow: var(--ds-shadow-overlay);
+
+  /* Animate from the trigger: transform-origin follows data-side, so the popup grows out
+     of the edge it is anchored to instead of scaling from its own centre. */
+  transform-origin: center top;
+  transition:
+    opacity var(--ds-duration-fast) var(--ds-easing-decelerate),
+    transform var(--ds-duration-fast) var(--ds-easing-decelerate);
+}
+
+.popup[data-side='top'] {
+  transform-origin: center bottom;
+}
+.popup[data-side='bottom'] {
+  transform-origin: center top;
+}
+.popup[data-side='left'] {
+  transform-origin: right center;
+}
+.popup[data-side='right'] {
+  transform-origin: left center;
+}
+
+/* Base UI's enter/exit hooks. Radix instead sets data-state="open|closed" — on that
+   layer, drive the same opacity/transform pair from keyframe animations. */
+.popup[data-starting-style],
+.popup[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.96);
+}
+/* Decelerate in (set above), accelerate out — leaving is not the mirror of arriving. */
+.popup[data-ending-style] {
+  transition-timing-function: var(--ds-easing-accelerate);
+}
+
+/* --- items ------------------------------------------------------------------ */
+
+.item {
+  /* Fixed indicator column, reserved even while unselected — otherwise every label
+     shifts sideways the moment the selection changes. */
+  display: grid;
+  grid-template-columns: var(--ds-space-4) 1fr;
+  align-items: center;
+
+  padding: var(--ds-space-1) var(--ds-space-2);
+  border-radius: var(--ds-radius-sm);
+
+  font-family: var(--ds-type-body-sm-font-family);
+  font-size: var(--ds-type-body-sm-font-size);
+  line-height: var(--ds-type-body-sm-line-height);
+  color: var(--ds-color-fg-default);
+  cursor: default;
+  user-select: none;
+  outline: none; /* highlight IS the focus treatment inside the listbox */
+}
+
+/* data-highlighted, never :hover — cursor keys and the pointer must light items
+   IDENTICALLY, and :hover only knows about one of them. */
+.item[data-highlighted] {
+  background: var(--ds-color-bg-subtle-hover);
+}
+
+.item[data-selected] {
+  font-weight: var(--ds-type-label-font-weight);
+}
+
+.item[data-disabled] {
+  color: var(--ds-color-fg-disabled);
+  pointer-events: none;
+}
+
+.itemIndicator {
+  display: inline-flex;
+  color: var(--ds-color-fg-accent);
+}
+.itemIndicator svg {
+  width: 1em;
+  height: 1em;
+}
+
+/* ItemText always occupies the second column, selected or not. */
+.itemText {
+  grid-column: 2;
+}
+
+/* --- groups and separators -------------------------------------------------- */
+
+.groupLabel {
+  padding: var(--ds-space-1) var(--ds-space-2);
+  font-family: var(--ds-type-caption-font-family);
+  font-size: var(--ds-type-caption-font-size);
+  font-weight: var(--ds-type-label-font-weight);
+  line-height: var(--ds-type-caption-line-height);
+  color: var(--ds-color-fg-muted);
+}
+
+.separator {
+  height: var(--ds-border-width-sm);
+  background: var(--ds-color-border-subtle);
+  margin-block: var(--ds-space-1);
+  /* Full-bleed across the popup's padding. */
+  margin-inline: calc(-1 * var(--ds-space-1));
+}
+
+/* --- description and error --------------------------------------------------- */
+
+.description {
+  margin: 0;
+  font-family: var(--ds-type-body-sm-font-family);
+  font-size: var(--ds-type-body-sm-font-size);
+  line-height: var(--ds-type-body-sm-line-height);
+  color: var(--ds-color-fg-muted);
+}
+
+.error {
+  margin: 0;
+  font-family: var(--ds-type-body-sm-font-family);
+  font-size: var(--ds-type-body-sm-font-size);
+  line-height: var(--ds-type-body-sm-line-height);
+  color: var(--ds-color-fg-danger);
+}
+
+/* --- reduced motion ----------------------------------------------------------- */
+
+/* Keep the fade (state change stays perceivable), drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+  .popup {
+    transition-property: opacity;
+  }
+  .popup[data-starting-style],
+  .popup[data-ending-style] {
+    transform: none;
+  }
+}

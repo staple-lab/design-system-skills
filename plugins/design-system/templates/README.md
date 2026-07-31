@@ -8,7 +8,8 @@ tokens/        DTCG sources (primitive · semantic.light · semantic.dark · com
                + build.mjs — the token engine and contrast gate
                + import-palette.mjs — rewrite the primitive ramps from Tailwind/Radix
 registry/      registry.schema.json + build-registry.mjs — the catalogue generator
-components/    reference Button (Tailwind/CVA and CSS Modules forms), meta file, cn helper
+components/    reference components: Button (Tailwind/CVA and CSS Modules forms), Icon,
+               Select, Table, Toast — each with meta file; cn helper
 testing/       the contract test suite, vitest config and jsdom setup
 lint/          eslint-plugin-design-system.mjs (4 rules), eslint + stylelint config
 inventory/     the catalogue site — Vite + React, reads registry.json and tokens.json
@@ -85,5 +86,6 @@ node scripts/build-registry.mjs && node scripts/build-registry.mjs --check
 ## Notes
 
 - The reference `Button` ships in **two styling forms** deliberately. That is the proof the token layer is the real system and the CSS layer is swappable — every value in both is a token.
+- `Select`, `Table` and `Toast` ship in **one form only** (CSS Modules, Base UI as the primitive where one is used) — the canonical form, with header notes on the Radix/React Aria deltas. Shipping every stack combination would be 3 primitives × 5 CSS systems of drift risk per component; the per-component recipes in `skills/design-system-architect/references/recipes/` carry the full per-layer mapping instead, and `ds-component-author` adapts. These three exist as templates because they are the hard ones: Select's field+popup anatomy, Table's DS/userland boundary, Toast's queue manager.
 - `components/Button/Button.tsx` implements the `render` polymorphism prop inline to stay dependency-free. On Base UI, `useRender` does it properly including ref merging; on Radix, `asChild` + `Slot`.
 - The inventory site is styled entirely with the system's own tokens. That is dogfooding, not tidiness: a token that does not work shows up here before it reaches a product.

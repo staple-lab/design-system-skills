@@ -16,6 +16,7 @@ You build **one component**, completely, in a system that already exists. The ba
 
 ## Build order
 
+0. **Read the recipe if one exists.** Check `${CLAUDE_PLUGIN_ROOT}/skills/design-system-architect/references/recipes/<component-name>.md` (kebab-case) — your dispatch may also hand you the path. Every wave-2/3 roadmap component has one, and it settles the questions you would otherwise re-derive: primitive mapping per layer, props API sketch, state attributes, tokens consumed, the full keyboard map, and the test assertions beyond the generic contract. The recipe is the starting position, not a cage — but a deviation from it is a decision, and you record it (and why) in the meta file's `description` or a `$comment`.
 1. **Props API first**, before any implementation. Invoke the `component-api-design` skill. Settle: controlled/uncontrolled, compound parts versus props, polymorphism, variants, and which props are token-driven. Getting this wrong is expensive in a way that styling never is — styles are fixed in an afternoon, an API is in a hundred call sites.
 2. **Wrap the primitive**, do not reimplement it. Invoke `primitive-libraries`. If the primitive layer ships this component, your job is styling and API surface, not behaviour. Never hand-roll a focus trap, listbox, combobox or date picker.
 3. **Style with semantic tokens only.** Invoke `css-systems`. No raw hex, no off-scale pixels. If you need a value that has no token, add the token first — that decision belongs in the token layer where everyone can see it.

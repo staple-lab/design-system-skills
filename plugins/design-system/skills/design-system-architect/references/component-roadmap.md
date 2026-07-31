@@ -49,21 +49,25 @@ or wrong.
 The components a product team asks for in their first month. All are buildable
 concurrently — each is a variation of a wave-1 pattern, none depends on another:
 
-| Component | What it exercises (and inherits) |
-|---|---|
-| Select | TextField's field anatomy + Dialog's popup/positioning |
-| Checkbox | Field anatomy; indeterminate state |
-| Radio + RadioGroup | Group context, roving focus — first composite focus model |
-| Switch | Checkbox's shape with different semantics (instant effect, not form value) |
-| Tooltip | Hover/focus timing, `aria-describedby`, the never-put-actions-in-it rule |
-| Popover | Dialog's portal/focus logic, non-modal |
-| Menu | Popover + typeahead + roving focus; the `role="menu"` keyboard contract |
-| Tabs | Roving focus, controlled/uncontrolled selection, lazy panels |
-| Toast | Queueing, timers, `role="status"` politeness, pause-on-hover |
-| Badge | First pure-presentation component — proves the token/variant grammar alone |
-| Card | Composition surface; slots without state |
-| Avatar | Image loading states, fallback initials |
-| Spinner + Skeleton | The two loading vocabularies; ship together so the decision rule (see the inventory's Patterns page) has both halves |
+Every component below has a **recipe** — `recipes/<kebab-name>.md` next to this file — that settles
+its primitive mapping, props sketch, state attributes, tokens, keyboard map and test contract.
+Dispatches pass the recipe path to `ds-component-author`; the agent reads it before the props step.
+
+| Component | Recipe | What it exercises (and inherits) |
+|---|---|---|
+| Select | `recipes/select.md` | TextField's field anatomy + Dialog's popup/positioning |
+| Checkbox | `recipes/checkbox.md` | Field anatomy; indeterminate state |
+| Radio + RadioGroup | `recipes/radio-group.md` | Group context, roving focus — first composite focus model |
+| Switch | `recipes/switch.md` | Checkbox's shape with different semantics (instant effect, not form value) |
+| Tooltip | `recipes/tooltip.md` | Hover/focus timing, `aria-describedby`, the never-put-actions-in-it rule |
+| Popover | `recipes/popover.md` | Dialog's portal/focus logic, non-modal |
+| Menu | `recipes/menu.md` | Popover + typeahead + roving focus; the `role="menu"` keyboard contract |
+| Tabs | `recipes/tabs.md` | Roving focus, controlled/uncontrolled selection, lazy panels |
+| Toast | `recipes/toast.md` | Queueing, timers, `role="status"` politeness, pause-on-hover |
+| Badge | `recipes/badge.md` | First pure-presentation component — proves the token/variant grammar alone |
+| Card | `recipes/card.md` | Composition surface; slots without state |
+| Avatar | `recipes/avatar.md` | Image loading states, fallback initials |
+| Spinner + Skeleton | `recipes/spinner-skeleton.md` | The two loading vocabularies; ship together so the decision rule (see the inventory's Patterns page) has both halves |
 
 **Gate:** the registry builds clean, the status board shows keyboard tests and an axe pass
 per component, and the fan-out found no gaps in the wave-1 token/motion layer (it will —
@@ -75,22 +79,25 @@ The components that make teams stop keeping a second component library around. A
 parallelisable, but these are bigger — expect Table and DatePicker to each cost what three
 wave-2 components cost:
 
-- **Combobox** — Select + free text + async loading. The hardest form control; do it after
-  Select has settled the field anatomy.
-- **Table / DataTable** — sorting, selection, sticky headers. Decide the boundary
-  deliberately: render + a11y in the DS, data logic (TanStack Table or similar) in
-  userland — a DS that swallows data fetching is unmaintainable.
-- **DatePicker** — locale, timezone, range selection. The classic scope sink; wrapping the
-  primitive layer's calendar (if it has one) beats building one.
-- **Accordion** — disclosure grammar, `aria-expanded`.
-- **Banner / Alert** — Toast's messaging vocabulary, inline and persistent.
-- **Progress** — determinate + indeterminate, `aria-valuenow`.
-- **Pagination** — pure composition of Button + Icon; almost free by now.
-- **Breadcrumbs** — nav semantics, truncation.
-- **EmptyState** — composition of Icon + type + Button; exists so empty states are
-  designed once (the Patterns page defines the three kinds).
-- **Navigation (side/top)** — the biggest composition surface; last because it consumes
-  half the components above it.
+- **Combobox** (`recipes/combobox.md`) — Select + free text + async loading. The hardest
+  form control; do it after Select has settled the field anatomy.
+- **Table / DataTable** (`recipes/table.md`) — sorting, selection, sticky headers. Decide
+  the boundary deliberately: render + a11y in the DS, data logic (TanStack Table or
+  similar) in userland — a DS that swallows data fetching is unmaintainable.
+- **DatePicker** (`recipes/date-picker.md`) — locale, timezone, range selection. The
+  classic scope sink; wrapping the primitive layer's calendar (if it has one) beats
+  building one.
+- **Accordion** (`recipes/accordion.md`) — disclosure grammar, `aria-expanded`.
+- **Banner / Alert** (`recipes/banner.md`) — Toast's messaging vocabulary, inline and
+  persistent.
+- **Progress** (`recipes/progress.md`) — determinate + indeterminate, `aria-valuenow`.
+- **Pagination** (`recipes/pagination.md`) — pure composition of Button + Icon; almost
+  free by now.
+- **Breadcrumbs** (`recipes/breadcrumbs.md`) — nav semantics, truncation.
+- **EmptyState** (`recipes/empty-state.md`) — composition of Icon + type + Button; exists
+  so empty states are designed once (the Patterns page defines the three kinds).
+- **Navigation (side/top)** (`recipes/navigation.md`) — the biggest composition surface;
+  last because it consumes half the components above it.
 
 ## Ready-made vs genuinely custom
 

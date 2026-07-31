@@ -1,0 +1,99 @@
+{
+  "$comment": "The judgement calls — everything that cannot be extracted from code. Props, tokens, tests and adoption are generated; this file holds what a human decided. Keep it honest: it is what the inventory site and AGENTS.md publish.",
+
+  "status": "stable",
+  "since": "0.1.0",
+  "category": "Feedback",
+  "summary": "Transient, non-blocking confirmation of an outcome. Fired imperatively via toast(), rendered by one ToastProvider.",
+  "description": "Toast announces that something finished — a save landed, an export is ready, a request failed. It queues, auto-dismisses, pauses its timers on hover/focus/window blur, and never takes focus. The imperative toast() API works from any code, React or not; the Provider at the app root renders the queue.",
+
+  "synonyms": ["notification", "snackbar", "flash message", "growl"],
+
+  "useFor": [
+    "Confirming background or async outcomes: 'Changes saved', 'Export ready'",
+    "Failures of an action the user just took, with a retry action (variant=\"danger\")",
+    "Offering a time-boxed undo after a destructive action — alongside a persistent undo path"
+  ],
+  "dontUseFor": [
+    "Errors the user must resolve or keep seeing — use Banner, which persists and stays findable",
+    "Form validation — inline, next to the field; a toast disappears before the user finds the field",
+    "Anything requiring a decision or reading time — that is Dialog; a toast with two actions is a Dialog in denial"
+  ],
+
+  "keyboard": [
+    { "keys": "F6", "action": "Moves focus to the toast viewport — the documented route for keyboard users to reach an action before the timeout (Radix systems default to F8)" },
+    { "keys": "Tab / Shift+Tab", "action": "Through each toast's action and close button, then out of the viewport" },
+    { "keys": "Enter / Space", "action": "Activates the focused action or close button" },
+    { "keys": "Escape", "action": "Dismisses the focused toast" }
+  ],
+
+  "a11y": {
+    "role": "status | alert",
+    "provides": [
+      "role=\"status\" (polite) for info/success/warning; role=\"alert\" (assertive) only for danger — a success must not interrupt the screen reader mid-sentence",
+      "Focus is never moved when a toast appears — appearing is not an interaction",
+      "Timers pause on viewport hover, on focus within, and on window blur, so a toast is not dismissed while unread",
+      "A close button on every toast; auto-dismiss is a convenience, never the only exit",
+      "Queueing beyond the visible limit (default 3), FIFO, instead of stacking over the page"
+    ],
+    "consumerMustProvide": [
+      "A persistent alternate path to any action offered in a toast — 'Undo' here must also exist in a menu or history, or a missed toast is data loss",
+      "A title that carries the meaning in text; the variant colour and icon are reinforcement, not the message",
+      "Exactly one ToastProvider, at the app root — two providers means two competing viewports"
+    ],
+    "limitations": [
+      "A toast is only discoverable while visible. Screen-reader users hear it once; sighted users who glanced away never see it. Anything that must remain findable belongs in a Banner or in the page.",
+      "The default 5s timeout is a floor. Toasts with actions warrant longer, or persistent-until-dismissed."
+    ]
+  },
+
+  "doDont": [
+    {
+      "do": "Confirm async outcomes: toast.success('Changes saved')",
+      "dont": "Toast what the user is already looking at — a row that visibly moved, an inline success state",
+      "why": "A redundant announcement trains users to ignore toasts, and the one that mattered gets ignored with them."
+    },
+    {
+      "do": "Offer 'Undo' in a deletion toast and somewhere persistent",
+      "dont": "Make the toast the only path to any action",
+      "why": "The toast disappears in seconds by design. If missing it loses the user something, the action was never transient."
+    },
+    {
+      "do": "Reserve variant=\"danger\" for failures that need action",
+      "dont": "Announce successes assertively or promote every warning to danger",
+      "why": "danger maps to role=\"alert\", which interrupts the screen reader mid-sentence. Interruption is a budget; spend it on things that are actually wrong."
+    },
+    {
+      "do": "Keep it to a title and one short line",
+      "dont": "Put paragraphs, forms, or a second action in a toast",
+      "why": "Content that needs reading time or a decision outlives the timer. That is a Dialog (blocking) or a Banner (persistent), not a toast."
+    }
+  ],
+
+  "examples": [
+    {
+      "title": "Provider setup",
+      "description": "Mount once at the app root. The viewport, F6 shortcut, queue and timers all come with it.",
+      "code": "<ToastProvider>\n  <App />\n</ToastProvider>"
+    },
+    {
+      "title": "Fire and forget",
+      "description": "Works from anywhere — a fetch .catch, a store effect, a websocket handler. No hook, no context.",
+      "code": "toast.success('Changes saved');\ntoast.error('Export failed', { description: 'The server did not respond.' });"
+    },
+    {
+      "title": "With an action",
+      "description": "One action, and it must also exist somewhere persistent — the toast is the shortcut, not the source.",
+      "code": "toast({\n  title: 'Message archived',\n  action: { label: 'Undo', onClick: () => restore(id) },\n});"
+    },
+    {
+      "title": "Dismiss programmatically",
+      "description": "toast() returns an id; dismiss it when the thing it announced becomes moot.",
+      "code": "const id = toast({ title: 'Uploading…', timeout: 60000 });\nawait upload(file);\ntoast.dismiss(id);\ntoast.success('Upload complete');"
+    }
+  ],
+
+  "related": ["Banner", "Dialog", "Spinner"],
+
+  "shadowImplementations": []
+}

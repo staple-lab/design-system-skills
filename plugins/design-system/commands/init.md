@@ -24,3 +24,10 @@ The short version of what must happen — the skill has the detail:
 Templates live in `${CLAUDE_PLUGIN_ROOT}/templates/`. Copy and adapt them rather than writing files from memory — they are the tested versions.
 
 Finish by printing a short map of what was created, the commands the team now has (`npm run tokens`, `npm run inventory`, `npm run test`, `npm run lint:ds`), and the follow-up slash commands (`/design-system:component`, `/design-system:tokens`, `/design-system:audit`).
+
+Then offer wave 2 — but do not build it inside init. Init's scope ends at the wave-1 gate
+(the roadmap's reason: everything after multiplies whatever the wave-1 grammar got right or
+wrong, so the user must see and approve the three reference components first). Point at
+`/design-system:component` with the open-ended form ("build wave 2") — it fans out one
+`ds-component-author` per component in parallel, each seeded with its recipe from
+`${CLAUDE_PLUGIN_ROOT}/skills/design-system-architect/references/recipes/`.

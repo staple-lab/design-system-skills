@@ -1,0 +1,101 @@
+{
+  "$comment": "The judgement calls — everything that cannot be extracted from code. Props, tokens, tests and adoption are generated; this file holds what a human decided. Keep it honest: it is what the inventory site and AGENTS.md publish.",
+
+  "status": "stable",
+  "since": "0.3.0",
+  "category": "Data display",
+  "summary": "Tabular data with sorting, row selection and a sticky header. Renders and announces; never owns the data.",
+  "description": "Table draws the boundary deliberately: rendering and accessibility live here — semantic table elements, aria-sort, a checkbox selection column, the sticky header — while data logic (sorting, filtering, pagination, fetching) stays in userland. It takes already-sorted rows plus a sort descriptor and echoes header clicks back through onSortChange; TanStack Table or your own useMemo does the sorting. That split is what keeps a design-system table maintainable.",
+
+  "synonyms": ["data table", "datagrid", "data grid", "grid", "spreadsheet", "rows"],
+
+  "useFor": [
+    "Rows of records the user scans, sorts and compares: people, invoices, jobs",
+    "Bulk actions over a selection (the checkbox column drives a toolbar)",
+    "Data whose column headers carry meaning a screen reader should announce per cell"
+  ],
+  "dontUseFor": [
+    "Layout — that is CSS grid; a layout table announces phantom rows and columns",
+    "Key-value pairs — a description list says 'label: value' without a header row",
+    "Spreadsheet-style cell editing — that is a role=\"grid\" widget with roving cell focus, a different component with a different keyboard contract",
+    "Sorting, filtering or fetching — pass the result in; the table will not do it"
+  ],
+
+  "keyboard": [
+    { "keys": "Tab", "action": "Moves through sort buttons and checkboxes in reading order — the table itself is a document structure, not a widget, so arrow keys stay with the browser and screen reader" },
+    { "keys": "Enter / Space", "action": "On a sort header: toggles ascending/descending via onSortChange" },
+    { "keys": "Space", "action": "On a row checkbox: toggles selection; on the header checkbox: selects or clears all supplied keys" }
+  ],
+
+  "a11y": {
+    "role": "table",
+    "provides": [
+      "Native <table>/<thead>/<th scope=\"col\"> semantics — screen-reader table navigation with row and column headers announced as context works only on a real table",
+      "aria-sort on the sorted column's th only; the other headers stay silent rather than chorusing 'none'",
+      "The sort affordance is a real <button> inside the th, so it is focusable and operable without pointer",
+      "Select-all reflects partial selection through the checkbox's indeterminate DOM property",
+      "A sticky header that keeps its own opaque background, so pinned column labels stay legible over scrolling rows"
+    ],
+    "consumerMustProvide": [
+      "An accessible name for the table: aria-label or aria-labelledby on <Table>",
+      "Per-row checkbox labels that name the row ('Select Ada Lovelace') — enforced by SelectCell's required aria-label prop",
+      "Already-sorted rows: onSortChange means 're-sort and re-render'; the table never reorders the DOM",
+      "aria-rowcount and aria-rowindex when rows are virtualized, because the DOM no longer contains the whole table"
+    ],
+    "limitations": [
+      "Not a grid: no arrow-key cell navigation. role=\"grid\" takes over the arrow keys and demands a complete roving-focus implementation — adopt it only for spreadsheet-like editing, as a separate component",
+      "Selection is announced by the checkboxes; aria-selected is defined for grid rows and would be unsupported noise on a plain table",
+      "No built-in virtualization — see the do/don't for why that is a feature"
+    ]
+  },
+
+  "doDont": [
+    {
+      "do": "Pass sorted rows and the descriptor: sortDescriptor={sort} onSortChange={setSort}",
+      "dont": "Expect the table to sort, filter or fetch",
+      "why": "Owning sorting means owning per-type comparators, Intl.Collator, null placement and server-side flags — a data library's surface inside a styling component. TanStack Table computes; this table renders."
+    },
+    {
+      "do": "Compose the parts — real <table>, <th scope=\"col\">, <td>",
+      "dont": "Build a div grid with role attributes sprinkled on",
+      "why": "Screen-reader table navigation announces the row and column headers for every cell on a real table, for free. A div grid starts from zero, and every missed or misplaced role fails silently."
+    },
+    {
+      "do": "Render skeleton rows matching the final row geometry while loading",
+      "dont": "Swap the whole table for a centered spinner",
+      "why": "The table's shape is known, so show the shape: a spinner erases the headers the user was reading, and the swap reflows the page when rows land."
+    },
+    {
+      "do": "Virtualize in userland past ~200 rows, adding aria-rowcount/aria-rowindex",
+      "dont": "Ask the design system to ship a built-in virtualizer",
+      "why": "A DS-owned virtualizer couples the system to a scroll library forever and breaks find-in-page and screen-reader row enumeration for every table — including the twenty-row ones that never needed it."
+    }
+  ],
+
+  "examples": [
+    {
+      "title": "Basic",
+      "description": "The compound parts mirror the HTML they render. Name the table — it is what a screen reader lists it as.",
+      "code": "<Table aria-label=\"Team members\">\n  <Table.Head>\n    <Table.Row>\n      <Table.HeaderCell>Name</Table.HeaderCell>\n      <Table.HeaderCell>Role</Table.HeaderCell>\n    </Table.Row>\n  </Table.Head>\n  <Table.Body>\n    {rows.map((row) => (\n      <Table.Row key={row.id}>\n        <Table.Cell>{row.name}</Table.Cell>\n        <Table.Cell>{row.role}</Table.Cell>\n      </Table.Row>\n    ))}\n  </Table.Body>\n</Table>"
+    },
+    {
+      "title": "Sorting (the boundary in action)",
+      "description": "The consumer sorts; the table reflects. Clicking a header only fires onSortChange — rows move when you re-render them.",
+      "code": "const [sort, setSort] = useState<SortDescriptor>({ column: 'name', direction: 'ascending' });\nconst collator = new Intl.Collator();\nconst sorted = useMemo(\n  () => [...rows].sort((a, b) => (sort.direction === 'ascending' ? 1 : -1) * collator.compare(a[sort.column], b[sort.column])),\n  [rows, sort],\n);\n\n<Table aria-label=\"Team members\" sortDescriptor={sort} onSortChange={setSort}>\n  <Table.Head>\n    <Table.Row>\n      <Table.HeaderCell column=\"name\">Name</Table.HeaderCell>\n      <Table.HeaderCell column=\"role\">Role</Table.HeaderCell>\n    </Table.Row>\n  </Table.Head>\n  <Table.Body>{sorted.map((row) => /* … */ null)}</Table.Body>\n</Table>"
+    },
+    {
+      "title": "Row selection",
+      "description": "SelectAllCell takes the full key list from you — the table never knows the data set, so 'select all' semantics (this page vs the whole result) stay your decision.",
+      "code": "<Table aria-label=\"Invoices\" selectedKeys={selected} onSelectionChange={setSelected}>\n  <Table.Head>\n    <Table.Row>\n      <Table.SelectAllCell allKeys={rows.map((r) => r.id)} />\n      <Table.HeaderCell>Invoice</Table.HeaderCell>\n    </Table.Row>\n  </Table.Head>\n  <Table.Body>\n    {rows.map((row) => (\n      <Table.Row key={row.id} rowKey={row.id}>\n        <Table.SelectCell aria-label={`Select ${row.number}`} />\n        <Table.Cell>{row.number}</Table.Cell>\n      </Table.Row>\n    ))}\n  </Table.Body>\n</Table>"
+    },
+    {
+      "title": "Sticky header",
+      "description": "You own the scroll container, the table pins its header inside it. The header cells keep an opaque background so rows do not ghost through.",
+      "code": "<div className={styles.scrollArea /* max-height + overflow: auto */}>\n  <Table aria-label=\"Audit log\" stickyHeader>{/* … */}</Table>\n</div>"
+    }
+  ],
+
+  "related": ["Pagination", "Skeleton", "EmptyState", "Checkbox"],
+
+  "shadowImplementations": []
+}

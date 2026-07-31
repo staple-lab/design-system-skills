@@ -1,0 +1,172 @@
+/*
+ * Toast, CSS Modules form. Every value is a semantic token — no hex, no magic px — which
+ * is what lets the whole surface re-theme (light/dark/brand) without touching this file.
+ *
+ * Enter/exit: Base UI keeps the node mounted through the exit and stamps
+ * [data-starting-style] for the first frame and [data-ending-style] while leaving, so
+ * plain transitions cover both directions with no AnimatePresence. On Radix, keep the
+ * same declarations but key them off [data-state='open'] / [data-state='closed'] keyframes.
+ */
+
+.viewport {
+  position: fixed;
+  z-index: var(--ds-z-toast); /* above z.modal on purpose — a toast must clear an open dialog */
+  inset-block-end: var(--ds-space-4);
+  inset-inline-end: var(--ds-space-4); /* logical properties → free RTL */
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-2);
+  /* Width is layout, not scale: a candidate for a `toast.width` entry in
+     component.tokens.json if products start overriding it. Never wider than the
+     viewport minus the margins on phones. */
+  width: min(24rem, calc(100vw - var(--ds-space-8)));
+}
+
+/* The viewport itself is focusable via the F6 shortcut — it needs a visible ring too.
+   :focus-visible only: :focus fires on mouse click, and that is how rings get deleted. */
+.viewport:focus-visible {
+  outline: var(--ds-focus-ring-width) solid var(--ds-color-ring);
+  outline-offset: var(--ds-focus-ring-offset);
+}
+
+/* --- toast surface -------------------------------------------------------- */
+
+.root {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ds-space-3);
+  padding: var(--ds-space-4);
+
+  background: var(--ds-color-bg-surface);
+  color: var(--ds-color-fg-default);
+  border: var(--ds-border-width-sm) solid var(--ds-color-border-subtle);
+  /* The variant edge — recoloured per variant below. Colour + icon carry the variant
+     visually; the TITLE carries it textually, which is why the icon can stay aria-hidden. */
+  border-inline-start: var(--ds-border-width-lg) solid var(--ds-color-border-default);
+  border-radius: var(--ds-radius-lg);
+  box-shadow: var(--ds-shadow-overlay);
+
+  transition:
+    transform var(--ds-duration-normal) var(--ds-easing-decelerate),
+    opacity var(--ds-duration-normal) var(--ds-easing-decelerate);
+}
+
+/* Entering: first-frame styles the transition runs FROM. transform + opacity only —
+   both compositor properties; animating height/margin here would jank the whole stack. */
+.root[data-starting-style] {
+  opacity: 0;
+  transform: translateY(var(--ds-space-4));
+}
+
+/* Leaving: faster and accelerating — the user has already moved on; making them watch
+   the goodbye is how UIs feel sluggish. */
+.root[data-ending-style] {
+  transition-duration: var(--ds-duration-fast);
+  transition-timing-function: var(--ds-easing-accelerate);
+  opacity: 0;
+  transform: translateY(var(--ds-space-2));
+}
+
+/* --- variants ------------------------------------------------------------- */
+/* Accent lands on the edge and icon ONLY. Body text stays fg.default/fg.muted —
+   tinted text on tinted surfaces is where 4.5:1 quietly dies; that look belongs to
+   Banner, whose *-subtle backgrounds are contrast-gated for it. */
+
+.root[data-variant='info'] { border-inline-start-color: var(--ds-color-fg-accent); }
+.root[data-variant='info'] > .icon { color: var(--ds-color-fg-accent); }
+
+.root[data-variant='success'] { border-inline-start-color: var(--ds-color-fg-success); }
+.root[data-variant='success'] > .icon { color: var(--ds-color-fg-success); }
+
+.root[data-variant='warning'] { border-inline-start-color: var(--ds-color-fg-warning); }
+.root[data-variant='warning'] > .icon { color: var(--ds-color-fg-warning); }
+
+.root[data-variant='danger'] { border-inline-start-color: var(--ds-color-fg-danger); }
+.root[data-variant='danger'] > .icon { color: var(--ds-color-fg-danger); }
+
+/* --- content -------------------------------------------------------------- */
+
+.content {
+  flex: 1;
+  min-width: 0; /* lets long titles truncate/wrap instead of stretching the toast */
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-1);
+}
+
+.title {
+  font-family: var(--ds-type-label-font-family);
+  font-size: var(--ds-type-label-font-size);
+  font-weight: var(--ds-type-label-font-weight);
+  line-height: var(--ds-type-label-line-height);
+}
+
+.description {
+  color: var(--ds-color-fg-muted);
+  font-family: var(--ds-type-body-sm-font-family);
+  font-size: var(--ds-type-body-sm-font-size);
+  line-height: var(--ds-type-body-sm-line-height);
+}
+
+.icon {
+  flex-shrink: 0; /* icons in flex rows squash without this */
+  width: var(--ds-space-4);
+  height: var(--ds-space-4);
+  margin-block-start: var(--ds-space-1); /* optical: aligns the glyph with the title's cap height */
+}
+
+/* --- action + close ------------------------------------------------------- */
+
+.action,
+.close {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  border-radius: var(--ds-radius-sm);
+  cursor: pointer;
+  transition: background-color var(--ds-duration-fast) var(--ds-easing-standard),
+    color var(--ds-duration-fast) var(--ds-easing-standard);
+}
+
+.action {
+  padding: var(--ds-space-1) var(--ds-space-2);
+  color: var(--ds-color-fg-accent);
+  font-family: var(--ds-type-label-font-family);
+  font-size: var(--ds-type-label-font-size);
+  font-weight: var(--ds-type-label-font-weight);
+}
+.action:hover { background: var(--ds-color-bg-subtle); }
+
+.close {
+  position: relative;
+  padding: var(--ds-space-1);
+  color: var(--ds-color-fg-muted);
+}
+.close:hover {
+  color: var(--ds-color-fg-default);
+  background: var(--ds-color-bg-subtle);
+}
+/* Extends the tap target toward 44px without changing the visual bounds. */
+.close::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--ds-space-2));
+}
+
+.action:focus-visible,
+.close:focus-visible {
+  outline: var(--ds-focus-ring-width) solid var(--ds-color-ring);
+  outline-offset: var(--ds-focus-ring-offset);
+}
+
+/* --- reduced motion ------------------------------------------------------- */
+/* Movement goes, the opacity fade stays: "reduced" means less motion, not zero
+   feedback — a toast that pops with no indication at all is its own usability bug. */
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .root[data-starting-style],
+  .root[data-ending-style] {
+    transform: none;
+  }
+}

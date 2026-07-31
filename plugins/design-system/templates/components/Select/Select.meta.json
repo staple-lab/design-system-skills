@@ -1,0 +1,104 @@
+{
+  "$comment": "The judgement calls — everything that cannot be extracted from code. Props, tokens, tests and adoption are generated; this file holds what a human decided. Keep it honest: it is what the inventory site and AGENTS.md publish.",
+
+  "status": "stable",
+  "since": "0.1.0",
+  "category": "Forms",
+  "summary": "Choose one of a known set of options. A form control first: it posts a value.",
+  "description": "Select covers single-choice fields with roughly 4–15 known options — country, role, sort order. It wraps the primitive layer's Select, so typeahead, wheel and touch scrolling, focus return and aria-activedescendant management are inherited, not owned. The trigger uses the same field anatomy as TextField and the popup uses the same overlay surface as Dialog, so a form full of mixed controls reads as one system.",
+
+  "synonyms": ["dropdown", "picker", "select menu", "listbox", "choose", "combo box"],
+
+  "useFor": [
+    "Choosing exactly one of 4–15 known options: country, timezone, role, sort order",
+    "Form fields that post a value — `name` wires the hidden input for a plain form submit",
+    "Grouped option sets (`Select.Group` with a label) where the categories aid scanning"
+  ],
+  "dontUseFor": [
+    "3 or fewer options — RadioGroup shows them all in one glance for the same cost; a select hides them behind a click",
+    "More than ~15 options, or options loaded async — that scrolling-and-hunting interaction is what Combobox exists to replace",
+    "Actions that fire on selection ('Export as…') — that is Menu's contract; a Select that navigates or mutates on change breaks every user who cursors through options to hear them",
+    "Multi-select — this component's value is a single string by design; a multi-select is a different control with different announcement semantics"
+  ],
+
+  "keyboard": [
+    { "keys": "Enter / Space / ArrowDown", "action": "On the closed trigger: opens, focus moves to the selected (or first) item" },
+    { "keys": "ArrowUp / ArrowDown", "action": "Open: moves the highlight; does not wrap silently past the ends" },
+    { "keys": "Home / End", "action": "Open: jumps to the first / last item" },
+    { "keys": "a–z typeahead", "action": "Open AND closed: jumps to the next matching option — closed-state typeahead selects without opening" },
+    { "keys": "Enter / Space", "action": "Open: selects the highlighted item, closes, returns focus to the trigger" },
+    { "keys": "Escape", "action": "Open: closes without selecting, returns focus to the trigger" },
+    { "keys": "Tab", "action": "Open: closes and moves focus on (the primitive's default — deliberately not overridden)" }
+  ],
+
+  "a11y": {
+    "role": "combobox (trigger) + listbox/option (popup)",
+    "provides": [
+      "A visible label wired to the trigger — `label` is required by the prop types, so an unlabelled select cannot compile",
+      "The primitive's full combobox/listbox semantics: typeahead, focus return to the trigger on every close path, aria-activedescendant management",
+      "description and error joined into one aria-describedby chain, in reading order",
+      "`aria-invalid` plus role=\"alert\" on the error text, so an appearing error is announced rather than discovered on the next focus",
+      "Form participation via a hidden input when `name` is set — a plain <form> post includes the value",
+      "A reserved indicator column, so labels do not shift when the selection changes"
+    ],
+    "consumerMustProvide": [
+      "A label that names the FIELD ('Country'), not the instruction ('Choose one')",
+      "Error text that says what to do, paired with the border colour — never colour alone",
+      "Stable, unique `value` strings on items; the value is what posts, the children are what humans read"
+    ],
+    "limitations": [
+      "Options render into the DOM when open, so a very long list costs real layout time — beyond ~15 options reach for Combobox, which virtualises and filters",
+      "axe passes cannot tell you the option ORDER makes sense or that the label is useful; that stays a human review"
+    ]
+  },
+
+  "doDont": [
+    {
+      "do": "Use Select for 4–15 known options",
+      "dont": "Use it for 3 or fewer — use RadioGroup",
+      "why": "Radios show every option in one glance for the same screen cost; a select hides them behind a click and a scan. Below four options you are adding interaction cost and removing information."
+    },
+    {
+      "do": "Reach for Combobox when options exceed ~15 or arrive async",
+      "dont": "Add a filter input inside the Select popup",
+      "why": "Scrolling a Select of 200 items is the interaction Combobox exists to replace. A filter input bolted inside a Select is Combobox built badly: the focus model, typeahead and announcement semantics all fight each other."
+    },
+    {
+      "do": "Keep the trigger showing the selected value",
+      "dont": "Use a Select as an action menu ('Export as…' that fires on selection)",
+      "why": "That is Menu's contract. Screen-reader and keyboard users cursor through options to hear them read; a Select that navigates or mutates on change executes an action per arrow-key press."
+    },
+    {
+      "do": "Pair `error` with text — it joins the aria-describedby chain and announces via role=\"alert\"",
+      "dont": "Signal invalid by border colour alone",
+      "why": "3:1 contrast on a 1px border is not a message. Colour-blind users, zoomed-in users and screen-reader users all need the words; the red border is the accent, not the content."
+    }
+  ],
+
+  "examples": [
+    {
+      "title": "Basic",
+      "description": "Compound items, not an options array — so an item can grow an icon or a disabled state without the API changing.",
+      "code": "<Select label=\"Country\" placeholder=\"Select a country\" name=\"country\">\n  <Select.Item value=\"au\">Australia</Select.Item>\n  <Select.Item value=\"nz\">New Zealand</Select.Item>\n  <Select.Item value=\"jp\">Japan</Select.Item>\n  <Select.Item value=\"de\">Germany</Select.Item>\n</Select>"
+    },
+    {
+      "title": "Description and error",
+      "description": "Both join the trigger's aria-describedby chain, description first. The error also sets aria-invalid and announces on appearance.",
+      "code": "<Select\n  label=\"Shipping region\"\n  description=\"Determines available carriers.\"\n  error=\"Select a region to continue.\"\n>\n  <Select.Item value=\"apac\">Asia–Pacific</Select.Item>\n  <Select.Item value=\"emea\">EMEA</Select.Item>\n</Select>"
+    },
+    {
+      "title": "Groups",
+      "description": "Group labels aid scanning and are announced with the group.",
+      "code": "<Select label=\"Instrument\">\n  <Select.Group label=\"Strings\">\n    <Select.Item value=\"violin\">Violin</Select.Item>\n    <Select.Item value=\"cello\">Cello</Select.Item>\n  </Select.Group>\n  <Select.Separator />\n  <Select.Group label=\"Brass\">\n    <Select.Item value=\"trumpet\">Trumpet</Select.Item>\n  </Select.Group>\n</Select>"
+    },
+    {
+      "title": "Controlled",
+      "description": "value + onValueChange pass straight through to the primitive — the wrapper holds no mirrored state, so a frozen parent freezes the displayed value too.",
+      "code": "const [sort, setSort] = useState('newest');\n\n<Select label=\"Sort by\" value={sort} onValueChange={setSort} size=\"sm\">\n  <Select.Item value=\"newest\">Newest first</Select.Item>\n  <Select.Item value=\"oldest\">Oldest first</Select.Item>\n</Select>"
+    }
+  ],
+
+  "related": ["Combobox", "Menu", "RadioGroup", "TextField"],
+
+  "shadowImplementations": []
+}

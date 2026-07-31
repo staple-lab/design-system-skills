@@ -155,6 +155,13 @@ section('Path references');
           fail(`${relative(ROOT, file)}: mentions missing ${m[1]}/references/${m[2]}`);
       }
     }
+    // Bare recipes/<file>.md mentions (the roadmap's links) resolve against the
+    // architect skill's recipes dir, or relative to the mentioning file.
+    for (const m of text.matchAll(/(?<![\w/-])recipes\/([a-z0-9./-]+\.md)/g)) {
+      if (!existsSync(join(dirname(file), 'recipes', m[1])) &&
+          !existsSync(join(DS, 'skills', 'design-system-architect', 'references', 'recipes', m[1])))
+        fail(`${relative(ROOT, file)}: mentions missing recipes/${m[1]}`);
+    }
   }
   ok(`${rootRefs} \${CLAUDE_PLUGIN_ROOT} references resolve`);
 
@@ -213,7 +220,19 @@ section('Template smoke runs');
     const r5 = run(['registry/build-registry.mjs', '--check']);
     if (r4.status !== 0 || r5.status !== 0)
       fail(`registry build/--check failed:\n${(r4.stderr || '') + (r5.stderr || '')}`);
-    else ok('registry build + --check green against the scratch project');
+    else {
+      ok('registry build + --check green against the scratch project');
+      // The registry must extract the compound/complex templates, not just Button —
+      // Select is the canary for compound-part + popup component extraction.
+      try {
+        const reg = JSON.parse(readFileSync(join(scratch, '.design-system', 'registry.json'), 'utf8'));
+        const names = (reg.components ?? []).map((c) => c.name);
+        for (const expected of ['Button', 'Select', 'Table', 'Toast']) {
+          if (!names.includes(expected)) fail(`registry did not extract ${expected} (got: ${names.join(', ')})`);
+        }
+        if (names.includes('Select')) ok('registry extracts the compound templates (Select/Table/Toast)');
+      } catch (e) { fail(`could not read scratch registry.json: ${e.message}`); }
+    }
 
     // Importer failure mode: without tailwindcss installed it must die with instructions.
     // (The positive path needs the package installed — CI covers it.)

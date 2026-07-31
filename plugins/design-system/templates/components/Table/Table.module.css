@@ -1,0 +1,152 @@
+/*
+ * The same Table, styled with CSS Modules instead of Tailwind.
+ *
+ * Kept alongside the Tailwind version deliberately: it is the proof that the token layer
+ * is the real system and the CSS system is swappable. Every value here is a token — no
+ * hex, no magic px — which is exactly what makes the swap possible.
+ *
+ * Use ONE of these per project (`stack.cssSystem` in design-system.config.json), not both.
+ */
+
+.table {
+  width: 100%;
+  /* border-collapse paints row rules on the TABLE, so a sticky header scrolls out from
+     under its own bottom rule. separate + zero spacing keeps each rule on the cell that
+     owns it — these two lines are the difference between a sticky header that works and
+     one that sheds its border at the first scroll. */
+  border-collapse: separate;
+  border-spacing: 0;
+
+  background: var(--ds-color-bg-surface);
+  color: var(--ds-color-fg-default);
+  font-family: var(--ds-type-body-sm-font-family);
+  font-size: var(--ds-type-body-sm-font-size);
+  line-height: var(--ds-type-body-sm-line-height);
+  text-align: start; /* logical value → free RTL */
+}
+
+/* --- header --------------------------------------------------------------- */
+
+.headerCell {
+  padding: var(--ds-space-2) var(--ds-space-4);
+  vertical-align: middle;
+  text-align: start;
+  white-space: nowrap;
+
+  font-size: var(--ds-type-label-font-size);
+  font-weight: var(--ds-type-label-font-weight);
+  color: var(--ds-color-fg-muted);
+
+  /* The stronger of the two rules: the header/body boundary. Body rows use border-subtle. */
+  border-bottom: var(--ds-border-width-sm) solid var(--ds-color-border-default);
+}
+
+/* The sorted column reads at full strength; the rest stay quiet. */
+.headerCell[data-sorted] {
+  color: var(--ds-color-fg-default);
+}
+
+/* Sticky cells paint their OWN background — rows slide beneath them, and a transparent
+   pinned header shows every row ghosting through it. Sticky goes on the cells, with the
+   z token: a raw 9999 here is how portal stacking bugs start. */
+.table[data-sticky-header] .headerCell {
+  position: sticky;
+  top: 0;
+  z-index: var(--ds-z-sticky);
+  background: var(--ds-color-bg-surface);
+}
+
+/* The sort affordance is a real <button> inside the th — a clickable th is invisible
+   to the keyboard. */
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-space-1);
+
+  /* Pads the hit area; the negative margin keeps the label flush with unsortable
+     headers and with the cell text below. */
+  margin-inline: calc(-1 * var(--ds-space-2));
+  padding: var(--ds-space-1) var(--ds-space-2);
+
+  border: none;
+  border-radius: var(--ds-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  user-select: none;
+  cursor: pointer;
+
+  transition:
+    background-color var(--ds-duration-fast) var(--ds-easing-standard),
+    color var(--ds-duration-fast) var(--ds-easing-standard);
+}
+
+.sortButton:hover {
+  background: var(--ds-color-bg-subtle);
+  color: var(--ds-color-fg-default);
+}
+
+/* :focus-visible only — :focus fires on mouse click, and that is how focus styles get deleted. */
+.sortButton:focus-visible {
+  outline: var(--ds-focus-ring-width) solid var(--ds-color-ring);
+  outline-offset: var(--ds-focus-ring-offset);
+}
+
+.sortIcon {
+  width: var(--ds-space-3);
+  height: var(--ds-space-3);
+  flex-shrink: 0;
+  transition: transform var(--ds-duration-fast) var(--ds-easing-standard);
+}
+
+/* One arrow, rotated for descending — the transition makes the flip legible. */
+.headerCell[data-sorted='descending'] .sortIcon {
+  transform: rotate(180deg);
+}
+
+/* --- body ----------------------------------------------------------------- */
+
+.cell {
+  padding: var(--ds-space-3) var(--ds-space-4);
+  vertical-align: middle;
+  border-bottom: var(--ds-border-width-sm) solid var(--ds-color-border-subtle);
+}
+
+.row {
+  transition: background-color var(--ds-duration-fast) var(--ds-easing-standard);
+}
+
+/* Hover feedback on body rows only — a header row that lights up promises a click
+   it cannot honour. */
+.body .row:hover {
+  background: var(--ds-color-bg-subtle);
+}
+
+.row[data-selected] {
+  background: var(--ds-color-bg-accent-subtle);
+}
+
+/* --- selection ------------------------------------------------------------ */
+
+/* The one column that always gets an explicit width. */
+.checkboxCell {
+  width: var(--ds-space-10);
+  padding-inline: var(--ds-space-3);
+  text-align: center;
+}
+
+.checkbox {
+  width: var(--ds-space-4);
+  height: var(--ds-space-4);
+  vertical-align: middle;
+  cursor: pointer;
+  /* accent-color themes the native checkbox from the token layer — no custom control,
+     no re-implemented keyboard or announcement behaviour. */
+  accent-color: var(--ds-color-bg-accent);
+}
+
+.checkbox:focus-visible {
+  outline: var(--ds-focus-ring-width) solid var(--ds-color-ring);
+  outline-offset: var(--ds-focus-ring-offset);
+}
