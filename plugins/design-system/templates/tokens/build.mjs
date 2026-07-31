@@ -146,7 +146,10 @@ function resolveAll(space) {
     resolving.add(key);
     const value = resolveValue(token.value, resolveToken);
     resolving.delete(key);
-    const out = { ...token, value, type: token.type ?? space.get(key)?.type };
+    // Keep the pre-resolution reference: when the contrast gate fails, "{color.accent.600}"
+    // is the actionable name, not the hex it resolved to.
+    const whole = typeof token.value === 'string' ? REF.exec(token.value.trim()) : null;
+    const out = { ...token, value, type: token.type ?? space.get(key)?.type, ref: whole ? whole[1].trim() : undefined };
     resolved.set(key, out);
     return out;
   };
@@ -222,7 +225,7 @@ function shadow(s) {
   return `${inset}${dim(s.offsetX)} ${dim(s.offsetY)} ${dim(s.blur)}${spread} ${s.color}`;
 }
 
-/** `color.bg.accent` → `--ds-color-bg-accent` */
+/** `color.bg.accent` → `--<prefix>-color-bg-accent` — prefix from config `tokens.prefix`, default `ds` */
 function varName(path) {
   return P + path.replace(/\./g, '-').replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 }
@@ -361,9 +364,22 @@ function checkContrast(themeName, resolved) {
       const ratio = contrast(fg, bg);
       checked.push({ theme: themeName, fg: path, bg: bgPath, ratio: +ratio.toFixed(2), min, pass: ratio >= min });
       if (ratio < min) {
+        // Name the step behind each side: with an imported palette (import-palette.mjs)
+        // the fix is swapping which step the semantic token points at, and the step's
+        // $description says which vendor value is sitting there.
+        const refLine = (p, t) => {
+          if (!t?.ref) return '';
+          const prim = resolved.get(t.ref);
+          return `\n      ${p} = {${t.ref}}${prim?.description ? ` — ${prim.description}` : ''}`;
+        };
         failures.push(
           `  ${themeName}: ${path} on ${bgPath} → ${ratio.toFixed(2)}:1 (needs ${min}:1)\n` +
-            `      ${toHex(fg)} on ${toHex(bg)}`,
+            `      ${toHex(fg)} on ${toHex(bg)}` +
+            refLine(bgPath, bgToken) +
+            refLine(path, token) +
+            (bgToken?.ref || token.ref
+              ? `\n      Swap the referenced step until the pair clears ${min}:1 (e.g. point the bg one step darker, or the fg one step further from it).`
+              : ''),
         );
       }
     }

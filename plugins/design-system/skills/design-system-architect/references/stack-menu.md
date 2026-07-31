@@ -2,6 +2,8 @@
 
 The interview offers four options per question because that is what fits. This is everything behind "Other". Current as of **July 2026** — verify versions with `npm view <pkg> version` before you install, and prefer the repo's existing choice over anything here.
 
+The four questions are not independent — several component-layer picks contain a primitives answer or require a CSS-system answer. `stack-constraints.md` (next to this file) is the resolver: apply it after the interview, before writing the brief.
+
 ---
 
 ## 1. Headless primitive layer

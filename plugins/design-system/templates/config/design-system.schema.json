@@ -21,7 +21,9 @@
         "componentLayer": { "enum": ["own", "none", "mui", "mantine", "chakra", "heroui", "antd", "park", "radix-themes"] },
         "cssSystem": { "enum": ["tailwind", "css-modules", "stylex", "vanilla-extract", "panda", "emotion", "styled-components", "unocss"] },
         "motion": { "enum": ["motion", "gsap", "css", "motion+gsap", "react-spring", "none"] },
-        "rationale": { "type": "object", "additionalProperties": { "type": "string" } }
+        "icons": { "type": "string", "description": "Icon pack, kebab-case, e.g. 'lucide'. Free string because brand sets exist; the icon-system skill owns the menu." },
+        "resolved": { "type": "boolean", "description": "true once the constraint pass (design-system-architect references/stack-constraints.md) has run — i.e. the stack values are a checked, coherent set, not four raw interview answers. Couplings like componentLayer=heroui forcing cssSystem=tailwind are applied and explained before this is set." },
+        "rationale": { "type": "object", "additionalProperties": { "type": "string" }, "description": "One entry per stack decision saying WHY — including, for decisions the constraint pass resolved rather than the user chose, what implied them." }
       }
     },
 

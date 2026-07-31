@@ -78,6 +78,8 @@ duration.fast             easing.emphasized     z.popover
 - `on-accent` for "foreground that sits on the accent background". This pairing convention is what makes the contrast gate automatable.
 - No numbers in semantic names. `color.bg.surface.raised` not `color.bg.surface.2` — a number tells you nothing about when to use it.
 
+The grammar is an API, not a labelling convention — four tools parse it (the lint rules, the registry scanner, the inventory site, and the build's contrast gate, which discovers its pairs *by name*). Read `references/naming.md` for the exact contract: the `tier()` path classifier and its trap (a new top-level category silently defaults to the *component* tier), why state suffixes hang off the role with a hyphen rather than a new dot segment, and why the `--ds-` prefix is the only configurable part of a name.
+
 ## The scales
 
 Read `references/scales.md` for the full construction method. In brief:
@@ -88,6 +90,20 @@ Read `references/scales.md` for the full construction method. In brief:
 - **Radius / elevation / motion / z-index** — small, closed sets. Elevation especially: 4 levels maximum, each a *pair* of shadows (a tight contact shadow + a diffuse ambient one) or it looks flat and fake.
 - **Border width** — `none 0 · sm 1px · md 2px · lg 4px`. 1px is the default everywhere; 2px is emphasis (focus, selection); 4px is an indicator bar, not an outline.
 - **Opacity** — one token, `opacity.disabled = 0.5`, and the smallness is the point: opacity on text silently destroys the ratios the contrast gate enforces, so text dimming goes through `color.fg.muted` / `color.fg.disabled` (which the gate can see), and whole-element fades are the only legitimate use.
+
+### Importing a vendor palette
+
+When the team is already on Tailwind or Radix Colors, do not hand-transcribe hex values into the ramps — run the importer (copy from `${CLAUDE_PLUGIN_ROOT}/templates/tokens/import-palette.mjs` into the project's `tokens/` if it is not there):
+
+```bash
+node tokens/import-palette.mjs --source tailwind --accent orange --neutral slate --dry-run
+node tokens/import-palette.mjs --source radix --accent indigo --neutral slate
+node tokens/build.mjs   # the contrast gate validates the imported palette
+```
+
+It rewrites the five colour ramps inside `primitive.tokens.json` from the **locally installed** package (nothing vendored — you get the palette version in the project's lockfile), mapped onto the same 50–1000 steps the generated ramps use. Both step-mapping tables and their rationale are in `references/scales.md`. The principle is *normalize at the primitive tier*: the semantic layer, the themes and the contrast gate are untouched — `{color.accent.600}` still means "the solid-fill step", it just resolves to a Tailwind or Radix value now. If the gate fails after an import, that is the gate **working**: the vendor step sitting in that slot cannot carry the foreground the semantic layer puts on it, and the failure names the step to swap. Do not weaken the gate.
+
+The trade-off, both ways: a vendor palette buys designer familiarity and one-to-one parity with the swatches in the design tool; the generated OKLCH ramps buy guarantees the vendors do not make — most concretely the neutral 500/600 dual-text constraint (`fg.subtle` ≥3:1 on near-white in light *and* `fg.muted` ≥4.5:1 on near-black in dark), which falls between Tailwind's rungs and has to be interpolated on import.
 
 ## Theming
 

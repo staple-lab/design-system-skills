@@ -6,6 +6,7 @@ These are the **tested versions**. Copy and adapt them rather than writing equiv
 config/        design-system.config.json — the brief, plus its JSON schema
 tokens/        DTCG sources (primitive · semantic.light · semantic.dark · component)
                + build.mjs — the token engine and contrast gate
+               + import-palette.mjs — rewrite the primitive ramps from Tailwind/Radix
 registry/      registry.schema.json + build-registry.mjs — the catalogue generator
 components/    reference Button (Tailwind/CVA and CSS Modules forms), meta file, cn helper
 testing/       the contract test suite, vitest config and jsdom setup
@@ -14,9 +15,9 @@ inventory/     the catalogue site — Vite + React, reads registry.json and toke
 package/       package.json for a published system, and the CI workflow
 ```
 
-## The two scripts
+## The three scripts
 
-Both are **dependency-free Node ESM**, on purpose: they run in CI, in a pre-commit hook, and on a designer's machine that has never run `npm install`.
+All are **dependency-free Node ESM**, on purpose: they run in CI, in a pre-commit hook, and on a designer's machine that has never run `npm install`. (The palette importer reads palette *data* from the project's own `tailwindcss` / `@radix-ui/colors` install, but needs nothing installed to run and fails with instructions when the source package is absent.)
 
 ### `tokens/build.mjs`
 
@@ -37,6 +38,15 @@ Reads `tokens/*.tokens.json`, resolves `{references}` per theme, and emits to `t
 It also runs the **contrast gate**: every `color.fg.*` paired against `color.bg.*` by naming convention (`fg.on-accent` ↔ `bg.accent`), in every theme. Failures exit non-zero with the measured and required ratios. Per-token overrides live in `$extensions["design-system"].contrast` — `{ min: 3 }` for decorative foregrounds, `{ skip: true }` for disabled text, which WCAG exempts.
 
 It implements OKLCH → sRGB conversion so ramps can be authored perceptually and still be checked numerically.
+
+### `tokens/import-palette.mjs`
+
+```bash
+node tokens/import-palette.mjs --source tailwind --accent orange --neutral slate --dry-run
+node tokens/import-palette.mjs --source radix --accent indigo --neutral slate
+```
+
+Rewrites the five colour ramps in `tokens/primitive.tokens.json` from the locally installed `tailwindcss` (v4) or `@radix-ui/colors`, mapped onto the same 50–1000 steps the generated ramps use — the mapping tables and rationale live in the design-tokens skill's `references/scales.md`. Only the primitive tier changes; run `node tokens/build.mjs` afterwards so the contrast gate validates the imported palette.
 
 ### `registry/build-registry.mjs`
 

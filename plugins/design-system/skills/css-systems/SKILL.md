@@ -1,6 +1,6 @@
 ---
 name: css-systems
-description: Use when wiring design tokens into a styling system or writing component styles - Tailwind v4, CSS Modules, StyleX, vanilla-extract, Panda CSS, Emotion. Covers how tokens reach components in each system, variant patterns, theming, RSC compatibility, and how a design system ships its CSS to consumers.
+description: Use when wiring design tokens into a styling system or writing component styles - Tailwind v4, CSS Modules, StyleX, vanilla-extract, Panda CSS, Emotion - or when feeding tokens into a pre-styled component layer's theming (HeroUI, MUI, Mantine, Chakra, antd). Covers how tokens reach components in each system, variant patterns, theming, RSC compatibility, and how a design system ships its CSS to consumers.
 ---
 
 # CSS systems
@@ -179,7 +179,35 @@ Runtime CSS-in-JS. **Do not start here in 2026** — both need a client runtime,
 
 ---
 
-## Rules that hold in every system
+## Pre-styled component layers
+
+When `design-system.config.json → stack.componentLayer` names a pre-styled library
+(`heroui`, `mui`, `mantine`, `chakra`, `antd`, `radix-themes`, `park`), this skill's job
+changes: you are not styling components — the vendor did that — you are **feeding the
+vendor's theming surface from the tokens**. The full per-library wiring (and which of it is
+verified vs. needs checking) lives in
+`${CLAUDE_PLUGIN_ROOT}/skills/design-system-architect/references/stack-constraints.md`;
+the shape of the work:
+
+- **HeroUI** (Tailwind v4 required — npm-enforced peer dep): CSS-side. Assign HeroUI's
+  semantic variables from the generated `--ds-*` custom properties in `:root,
+  [data-theme='light']` and `.dark, [data-theme='dark']` blocks — `--accent:
+  var(--ds-color-bg-accent)`, `--accent-foreground: var(--ds-color-fg-on-accent)`,
+  `--background`, `--foreground`, and so on. HeroUI's own `@theme inline` bridge
+  (`themes/shared/theme.css`) then carries those into Tailwind utilities, and its
+  `color-mix()`-calculated hover/soft/field variants derive automatically — one assignment
+  re-themes the interactive states too. Use the same `data-theme` values as the token
+  build so one toggle flips both layers.
+- **MUI / Mantine / Chakra / antd**: JS-side. Token values flow into `createTheme` /
+  `MantineProvider` / the Chakra system config / `ConfigProvider theme.token` — as
+  **literal values from a token-build artifact, not `var(--ds-*)` strings**, because these
+  engines compute derived colors (hover tints, contrast text) from the values and cannot
+  compute from an unresolved `var()`.
+
+Either way the token layer stays the source of truth; what changes is the artifact the
+build emits and where it is handed over. The `tokens.css` substrate is still loaded first —
+product code outside the vendor's components consumes `--ds-*` directly, as everywhere
+else in this skill.
 
 1. **Semantic tokens only.** No raw hex, no magic px. New value → new token first. This is the lint layer's main job.
 2. **State from `data-*`, not from React.** `[data-state='open']`, `[data-disabled]`. The DOM is already the source of truth.

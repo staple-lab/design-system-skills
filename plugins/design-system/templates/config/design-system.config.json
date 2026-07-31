@@ -12,11 +12,15 @@
     "componentLayer": "own",
     "cssSystem": "tailwind",
     "motion": "motion",
+    "icons": "lucide",
+    "resolved": true,
     "rationale": {
       "primitives": "Base UI 1.x — actively maintained, render-prop composition, and the default the shadcn CLI now targets.",
       "componentLayer": "Own the code. Brand consistency is the reason this system exists, so a vendor's visual opinions are a cost, not a saving.",
       "cssSystem": "Tailwind v4 — @theme makes every token a CSS custom property, which is the shortest path from the DTCG source to something components can use.",
-      "motion": "Motion — this is product UI, not a brand site; AnimatePresence covers the exit animations CSS cannot."
+      "motion": "Motion — this is product UI, not a brand site; AnimatePresence covers the exit animations CSS cannot.",
+      "icons": "Lucide — 24px grid, per-icon imports, and the default the surrounding ecosystem assumes.",
+      "$comment": "If the constraint pass overrode an interview answer (e.g. componentLayer heroui forcing cssSystem tailwind), say so here: 'Tailwind v4 — implied by HeroUI, which peer-requires tailwindcss>=4.' resolved:true above asserts that pass ran."
     }
   },
 

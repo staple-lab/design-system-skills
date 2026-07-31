@@ -56,7 +56,7 @@ Read `references/stack-menu.md` for the full menu behind each question — the f
 | 3 | `CSS system` | How should components be styled? | **Tailwind v4** — CSS-first `@theme`, tokens are CSS vars by default · **CSS Modules** — plain CSS, zero build magic, RSC-safe · **StyleX** — Meta's build-time atomic CSS, typed, strict · **vanilla-extract** — typed `.css.ts`, compile-time token contracts |
 | 4 | `Motion` | What drives animation? | **Motion (`motion/react`)** — React-first, ~5kb mini bundle, best for UI · **GSAP** — timeline + ScrollTrigger, best when motion is the brand · **CSS-only** — transitions + `@keyframes` from motion tokens, zero JS · **Motion + GSAP** — Motion for UI, GSAP for scroll set-pieces |
 
-Adjust the recommendation to the survey: an existing Radix codebase makes Radix the recommendation, not Base UI. A marketing-heavy or scroll-choreographed product makes GSAP the recommendation. A Tailwind shop that wants velocity over a bespoke look is the cue to surface HeroUI (React Aria + Tailwind v4, see the stack menu) as the component-layer option — note it locks the CSS-system answer to Tailwind v4. Say the *why* in the option description — the user is picking a five-year commitment.
+Adjust the recommendation to the survey: an existing Radix codebase makes Radix the recommendation, not Base UI. A marketing-heavy or scroll-choreographed product makes GSAP the recommendation. A Tailwind shop that wants velocity over a bespoke look is the cue to surface HeroUI (React Aria + Tailwind v4, see the stack menu) as the component-layer option — note in the option description that it locks the CSS-system answer to Tailwind v4 (Step 3 enforces this). Say the *why* in the option description — the user is picking a five-year commitment.
 
 ### Round 2 — design + delivery (4 questions)
 
@@ -69,15 +69,25 @@ Adjust the recommendation to the survey: an existing Radix codebase makes Radix 
 
 If the user answers colour with "one brand hex", ask for the hex in plain text after the round — do not burn a question slot on free text.
 
+**After Round 2, one plain-text follow-up** (the rounds are full at 4 questions each, so this is not an `AskUserQuestion` slot): *"Which icon pack? Lucide is the default — consistent 24px grid, tree-shakeable, the shadcn ecosystem's choice — but if you have a brand icon set or another preference, name it."* Default to Lucide on a shrug. The `icon-system` skill owns the full menu and the trade-offs; do not re-derive them here. Record the answer as `stack.icons`.
+
 **Never skip the interview because you think you know.** Even when `$ARGUMENTS` names the whole stack, run round 1 with those choices pre-selected — confirming takes one click and catches the case where the user was describing what they have, not what they want.
 
-## Step 3 — Write the brief
+## Step 3 — Resolve the stack
+
+The four stack answers are not independent, and the interview cannot make them so — read `references/stack-constraints.md` and apply it before writing anything. The mechanics:
+
+1. **Component layer first** — it carries every hard coupling. HeroUI *requires* Tailwind v4 (npm-enforced peer dep) and *is* React Aria Components underneath, so one answer settles three questions. MUI, Mantine and antd bring their own styling engines and behaviour layers, which makes the primitives and CSS-system answers moot for their components. Chakra v3 embeds Ark. shadcn's `--base` flag must equal the primitives answer.
+2. **When a choice implies or overrides another answer, tell the user what was resolved and why — one sentence per resolution, not a new interview.** "You picked HeroUI, which is built on React Aria Components and requires Tailwind v4, so I've set primitives and the CSS system to match." Then continue. The exception: if the overridden answer was clearly the one the user cared about (they chose vanilla-extract for compile-time theme contracts, then added HeroUI as an afterthought), surface the conflict as a real question — which one goes?
+3. **Record the outcome.** The resolved values go into `stack.*`, `stack.resolved: true` marks that this pass ran, and every resolved-rather-than-chosen decision gets a `rationale` entry saying it was implied and by what. A config that silently records `cssSystem: "tailwind"` next to `componentLayer: "heroui"` reads as two decisions when it was one.
+
+## Step 4 — Write the brief
 
 Write `design-system.config.json` from `${CLAUDE_PLUGIN_ROOT}/templates/config/design-system.config.json`, filled with the answers. Show it to the user. This file is the contract — every other command in this plugin reads it, and the lint rules and inventory derive from it.
 
 Record the *why*, not just the what: a `rationale` field per decision. Two years from now someone will ask why the team is on vanilla-extract, and the answer should be in the repo.
 
-## Step 4 — Build order
+## Step 5 — Build order
 
 Each step is a skill. Invoke it; don't improvise from memory. The spine is serial — every step consumes the previous one's output — but the widest step, the reference components, **fans out to parallel subagents**. Built inline and one after another, the three components dominate init wall-clock *and* fill the conversation with every file they touch, so the later steps run in a heavy, slow context. Subagents fix both.
 
@@ -105,7 +115,7 @@ Stop and show the user here. Three real components in their colours is the momen
 6. **`component-inventory`** — the registry generator, then the site that reads it (including the authored Patterns and Content starter pages), then the AI surface: `AGENTS.md` and `llms.txt`, both generated from the registry, plus the registry MCP server (`${CLAUDE_PLUGIN_ROOT}/templates/mcp/server.mjs`, wired as `npm run mcp`). Wire visual regression here too — `${CLAUDE_PLUGIN_ROOT}/templates/testing/playwright.config.ts` and `${CLAUDE_PLUGIN_ROOT}/templates/testing/vrt/inventory.vrt.spec.ts` screenshot the inventory site itself, so every component's visual baseline comes free with its docs page. Independent of step 5 (lint reads the generated token file, inventory reads the registry) — run them in either order, or as two parallel subagents if the components came back clean.
 7. **`packaging-distribution`** — only if the brief says package.
 
-## Step 5 — Verify, then report
+## Step 6 — Verify, then report
 
 Run these and paste real output. A design system that does not build is worse than none, because people will work around it and never come back.
 

@@ -46,6 +46,45 @@ Ramps a system needs: **neutral** (the workhorse — 70% of the UI), **accent/br
 
 Focus rings need 3:1 against **both** the component and the page behind it — the common failure is a ring that clears the button but vanishes against the page. A two-tone ring (inner light, outer dark) is the reliable fix and works on any background.
 
+### Importing vendor palettes (Tailwind, Radix)
+
+`tokens/import-palette.mjs` rewrites the five ramps in `primitive.tokens.json` from a locally installed `tailwindcss` (v4 — the palette lives as CSS `@theme` in `theme.css`) or `@radix-ui/colors`, mapped onto the 50–1000 steps above. Normalization happens at the primitive tier only; the semantic layer and the contrast gate are untouched, and a gate failure after import is the gate working — the vendor step in that slot cannot carry its foreground, and the error names the step to swap. These are the mappings the script implements, and why.
+
+**Tailwind, chromatic ramps** (accent/success/warning/danger) — the conventions line up, so it is nearly 1:1:
+
+| Ours | Tailwind | Why |
+|---|---|---|
+| 50–900 | 50–900, 1:1 | Same nominal conventions: tw `<hue>-600` is the classic solid-button step, `50` the page tint. |
+| 950 | OKLCH midpoint of 900/950 | Our 950's job (dark-theme surface, between raised 900 and page 1000) has no Tailwind equivalent — Tailwind has no step between. |
+| 1000 | 950 | Both are "the darkest step". Tailwind added 950 in v3.3 for dark-mode page backgrounds, which is exactly our 1000's job. |
+
+**Tailwind, the neutral ramp** — different, because Tailwind's neutral dark half runs one rung darker than the ramp recipe above (tw 700 at L .372 ≈ recipe 800's .375; tw 900 at .208 ≈ recipe 950's .205):
+
+| Ours | Tailwind | Why |
+|---|---|---|
+| 50–400 | 50–400, 1:1 | The light halves agree. |
+| 500, 600 | OKLCH midpoints of 400/500 and 500/600 | These two steps carry a **dual text constraint** — `fg.subtle` ≥3:1 on near-white in light *and* `fg.muted` ≥4.5:1 on near-black in dark (and vice versa) — that lands *between* Tailwind's rungs. Interpolated, never extrapolated. |
+| 700–1000 | 600–950, shifted one slot down | Where the dark halves re-align: tw 600–950 match the recipe's 700–1000 within ~0.01 L. |
+
+**Radix** — role-mapped using Radix's documented step semantics (radix-ui.com, "understanding the scale"), not position-mapped. Our 50–600 take light-scale steps whose documented role matches the slot's job; our 700–1000 take `*Dark`-scale steps, so the dark theme — which reads the ramp's dark end for surfaces and interaction states — renders Radix's dark-appearance values:
+
+| Ours | Radix step | Radix's documented role |
+|---|---|---|
+| 50 | light 1 | app background |
+| 100 | light 3 | UI element background |
+| 200 | light 4 | hovered UI element background |
+| 300 | light 5 | active / selected UI element background |
+| 400 | light 7 | UI element border and focus rings |
+| 500 | light 9 | solid backgrounds |
+| 600 | light 11 | low-contrast text |
+| 700 | dark 5 | active / selected UI element background |
+| 800 | dark 4 | hovered UI element background |
+| 900 | dark 3 | UI element background |
+| 950 | dark 2 | subtle background |
+| 1000 | dark 1 | app background |
+
+Note what the Radix mapping gives up: Radix's light scale tops out at "high-contrast text" (step 12, unused here because our 700+ slots need dark-appearance values), so text steps 700/900 in a Radix-imported ramp are dark-scale *backgrounds* doing double duty. The gate decides whether that holds — measured, not assumed, same as everything else on this page.
+
 ---
 
 ## Spacing

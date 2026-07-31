@@ -97,6 +97,8 @@ For agents that speak MCP, `${CLAUDE_PLUGIN_ROOT}/templates/mcp/server.mjs` (dep
 
 Template: `${CLAUDE_PLUGIN_ROOT}/templates/inventory/` — a Vite + React app that reads `registry.json` and `tokens.json`, styled entirely with the system's own tokens. That last part is deliberate: **the docs site is the system's first consumer**, so a token that does not work shows up here first, and dogfooding is not optional if you want to find these problems before your users do.
 
+The site's own styles are authored against the default `--ds-` var prefix (in `src/inventory.css` and `src/pages.tsx`). If the project sets a different `tokens.prefix` in `design-system.config.json`, rewrite the prefix in the copied site files at scaffold time — a mechanical `sed 's/--ds-/--<prefix>-/g'`, nothing more. That is the only prefix-sensitive copy step: the registry scanner and the token data read the prefix from the config and the generated `tokens.json`, so they follow automatically.
+
 Deploy on merge to main. Documentation that requires a local dev server gets read by the person who wrote it and nobody else.
 
 ## Keeping it honest
