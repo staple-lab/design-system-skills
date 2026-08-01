@@ -38,7 +38,7 @@ It interviews you for your stack, then scaffolds a system where **one machine-re
 
 ## The interview
 
-Two rounds. Options are pre-selected from what is already in your repo, so confirming takes one click.
+Three rounds, and nothing typed as prose — options are pre-selected from what is already in your repo, so confirming takes one click, and anything free-form (your brand hex, the system's name) goes in the **Other** field of a question rather than a chat prompt.
 
 **Round 1 — stack**
 - **Primitives**: Base UI · Radix · React Aria Components · none *(Ark UI, Headless UI via Other)*
@@ -51,6 +51,29 @@ Two rounds. Options are pre-selected from what is already in your repo, so confi
 - **Typography**: system stack · UI sans · display serif + body sans · licensed fonts
 - **Distribution**: in-repo · workspace package · private npm · public npm
 - **Scope**: everything · foundations first · fit into an existing system · docs only
+
+**Round 3 — the specifics** *(only what rounds 1–2 left open)*
+- **Brand hex**: four hues verified to clear the contrast gate as generated, or your own via Other
+- **Icons**: Lucide · Phosphor · Heroicons · your own SVG set
+- **Name**: candidates derived from the repo, or your own
+- **Theme**: light-first · dark-first · follow the OS · light only
+
+## The build runs in parallel
+
+The build order reads as seven serial steps but the dependency graph is four phases deep, and its two slowest parts — `npm install` and the token/CSS/motion authoring — have nothing to do with each other:
+
+```
+                 ┌─ scaffold + install ────────────────────────────┐
+ brief written ──┤                                                 ├─ barrier ─┐
+                 └─ tokens ──→ ┌─ css-systems ─┐                   │           │
+                               └─ motion ──────┘─── barrier ───────┘           │
+                                                                               │
+   ┌───────────────────────────────────────────────────────────────────────────┘
+   └─ Button ∥ TextField ∥ Dialog ∥ Icon+layout ── barrier ─→ registry (once)
+                                                        └─→ lint ∥ inventory ─→ verify
+```
+
+Ten agents across four phases, each writing a disjoint set of files. The install disappears under the token work; the four wave-1 components cost the slowest one instead of the sum. It ships as a workflow script (`templates/workflows/build-design-system.mjs`) with a parallel-subagent fallback, and the file-ownership table that makes concurrent writes safe — one installer, one build-config owner, one registry build, no mid-flight verification — is in the architect skill's `references/build-phases.md`.
 
 ## What gets built
 

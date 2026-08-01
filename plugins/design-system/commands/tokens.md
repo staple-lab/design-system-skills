@@ -21,7 +21,15 @@ If there is no `tokens/*.tokens.json` (search upward from cwd), switch to **crea
    product code · tuned default preset), **type scale ratio** (1.200 minor third,
    recommended for product UI · 1.250 · 1.125 dense · 1.333 editorial), **density**
    (comfortable only · + compact for data-dense UIs), and **CSS system** only if no
-   config said so. Collect the actual hex as plain text after the round.
+   config said so.
+
+   If the answer is "brand hex", collect it with a **second `AskUserQuestion`**, not as
+   prose — offer four hexes verified to clear the contrast gate as generated (`#2563EB`
+   blue, `#7C3AED` violet, `#E11D48` rose, `#EA580C` orange) and let the user type their
+   real brand colour into **Other**. Every setting goes through a question; a value typed
+   as conversation is one you cannot reliably write into the brief. A light-peaking hue
+   (teal, cyan, green) typed into Other is fine — take it and apply the generator's
+   documented re-point rather than substituting a colour they did not choose.
 3. **Copy `${CLAUDE_PLUGIN_ROOT}/templates/tokens/`** into the project, write or update
    `design-system.config.json` (`stack.cssSystem`, `tokens.prefix`). Then run the
    chosen colour path — these are the tested scripts, never hand-compute ramps:

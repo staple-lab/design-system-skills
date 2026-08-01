@@ -74,6 +74,21 @@ have had real bugs fixed in them that a fresh rewrite would reintroduce.
 - **The lint plugin has no test harness dependency.** Its rules are plain objects; drive
   `rule.create(fakeContext)` visitors directly with hand-built nodes. That is how the
   "primitive token suggested for a raw hex" bug was caught.
+- **`templates/workflows/*.mjs` are Workflow scripts, not Node scripts.** They are executed
+  by the `Workflow` tool, so they use its globals (`agent`, `parallel`, `phase`, `log`,
+  `args`) and combine `export const meta` with a top-level `return` — which is neither valid
+  ESM nor valid CJS, so `node --check` rejects them as written. Syntax-check by stripping the
+  `export` and wrapping the body:
+
+  ```bash
+  { echo '(async () => {'; sed 's/^export const meta/const meta/' <file>; echo '})()'; } \
+    | node --check /dev/stdin
+  ```
+
+  Two constraints that are easy to violate and fail only at run time: `meta` must be a
+  **pure literal** (no variables, calls, spreads or interpolation), and `Date.now()`,
+  `new Date()` and `Math.random()` throw inside a workflow — they would break resume.
+  Every `phase()` title must have a matching entry in `meta.phases`.
 - **TSX templates must at least parse.** There is no `node_modules` here, so:
 
   ```bash

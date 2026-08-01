@@ -43,7 +43,9 @@ Also look at what the product already looks like — read a couple of the busies
 
 ## Step 2 — The interview
 
-Two rounds of `AskUserQuestion`. Not three, not seven. Pre-select the recommended option as the **first** option with `(Recommended)` in the label, and make the recommendation follow from the survey.
+Three rounds of `AskUserQuestion`, and **nothing collected outside them**. Pre-select the recommended option as the **first** option with `(Recommended)` in the label, and make the recommendation follow from the survey.
+
+**Every answer goes through `AskUserQuestion` — never ask the user to type a setting as prose.** A brand hex or a system name feels like free text, but `AskUserQuestion` already handles that: it always offers **Other**, which takes custom input. So a free-text question becomes a question with four good defaults *plus* the escape hatch, which is strictly better than a bare prompt — the user who has a brand hex types it into Other, and the user who does not gets four that work. A prose question also loses the structured answer: it arrives as conversation, not as a value you can write into the brief.
 
 Read `references/stack-menu.md` for the full menu behind each question — the four options are the common answers, and "Other" needs you to know the rest.
 
@@ -67,9 +69,30 @@ Adjust the recommendation to the survey: an existing Radix codebase makes Radix 
 | 3 | `Distribution` | Where does the design system live? | **In-repo** (`src/design-system/`) — no version boundary, fastest iteration · **Workspace package** — monorepo, consumed by sibling apps · **Private npm package** — internal registry, versioned · **Public npm package** — published, changesets + release CI |
 | 4 | `Scope` | What should I build now? | **Everything** — tokens, components, inventory, tests, lint, CI · **Foundations first** — tokens + theming + 3 reference components · **Add to existing system** — fit into what is already here · **Docs + inventory only** — the system exists, it just isn't documented |
 
-If the user answers colour with "one brand hex", ask for the hex in plain text after the round — do not burn a question slot on free text.
+### Round 3 — the specifics (ask only what rounds 1–2 left open)
 
-**After Round 2, one plain-text follow-up** (the rounds are full at 4 questions each, so this is not an `AskUserQuestion` slot): *"Which icon pack? Lucide is the default — consistent 24px grid, tree-shakeable, the shadcn ecosystem's choice — but if you have a brand icon set or another preference, name it."* Default to Lucide on a shrug. The `icon-system` skill owns the full menu and the trade-offs; do not re-derive them here. Record the answer as `stack.icons`.
+Rounds 1 and 2 settle the shape of the system; this round settles the three or four values
+that go straight into the brief. **Include a question only if the earlier answers left it
+open** — a round of two questions is correct when that is all that is genuinely unknown.
+
+| # | Header | Question | Options (first = recommended) | Ask when |
+|---|--------|----------|-------------------------------|----------|
+| 1 | `Brand hex` | Which colour should I build the ramp around? *(type your exact brand hex in Other)* | Four hexes, one per hue family — see below | colour was "one brand hex", or "multi-brand" (then this is brand 1) |
+| 2 | `Icons` | Which icon pack? | **Lucide** — 24px grid, per-icon imports, tree-shakeable, what the surrounding ecosystem assumes · **Phosphor** — six weights from one set · **Heroicons** — outline/solid pair, Tailwind Labs · **Custom brand set** — you provide the SVGs and I build the pipeline | always |
+| 3 | `Name` | What is this system called? | Three candidates derived from the repo — `<dir>-ui`, `@<scope>/ui`, `<Product> Design System` — plus Other | always |
+| 4 | `Theme` | Which theme is the system authored against first? | **Light-first, dark generated** — the common product default · **Dark-first** — author the dark ramp and derive light · **Follow the OS, no default** · **Light only** — add dark later | always |
+
+**The brand-hex options must be hexes that clear the contrast gate as generated**, so the
+first build is green without a re-point. Verified against `generate-ramps.mjs` +
+`build.mjs`: `#2563EB` (blue), `#7C3AED` (violet), `#E11D48` (rose) and `#EA580C` (orange)
+pass; teal `#0D9488`, cyan `#0891B2` and green `#16A34A` are light-peaking and fail until
+the semantic re-point. If the user types one of the latter into **Other**, take it — that is
+their brand, not a mistake — and tell them at the token step that the generator's finding
+moved `bg.accent` one step darker. Never silently substitute a different colour.
+
+Record the answers as `tokens.source` + the hex, `stack.icons`, `name`/`displayName`, and
+`tokens.defaultTheme`/`darkTheme`. The `icon-system` skill owns the full icon menu and its
+trade-offs; do not re-derive them here.
 
 **Never skip the interview because you think you know.** Even when `$ARGUMENTS` names the whole stack, run round 1 with those choices pre-selected — confirming takes one click and catches the case where the user was describing what they have, not what they want.
 
@@ -87,33 +110,79 @@ Write `design-system.config.json` from `${CLAUDE_PLUGIN_ROOT}/templates/config/d
 
 Record the *why*, not just the what: a `rationale` field per decision. Two years from now someone will ask why the team is on vanilla-extract, and the answer should be in the repo.
 
-## Step 5 — Build order
+## Step 5 — Build it, in parallel
 
-Each step is a skill. Invoke it; don't improvise from memory. The spine is serial — every step consumes the previous one's output — but the widest step, the reference components, **fans out to parallel subagents**. Built inline and one after another, the three components dominate init wall-clock *and* fill the conversation with every file they touch, so the later steps run in a heavy, slow context. Subagents fix both.
+**Do not build this inline, and do not build it in the order the steps are written.** The
+build order reads as seven serial steps; the real dependency graph is four phases deep, and
+its two slowest parts — `npm install` and the token/CSS/motion authoring — have nothing to do
+with each other. Run them as written and init takes the sum. Run them as the graph allows and
+it takes the slowest path.
 
-**Serial spine — each step feeds the next:**
+Building inline costs twice over: the wall-clock, and a conversation stuffed with every file
+the build touched, so the later steps run in a heavy, slow context and the user has to scroll
+past a thousand lines of scaffolding to find the thing they wanted to look at.
 
-1. **`design-tokens`** — DTCG sources, three tiers, light/dark, the build script, the contrast gate. Nothing can be styled until this exists. The colour answer runs its tested script, never hand-computed values: brand hex → `${CLAUDE_PLUGIN_ROOT}/templates/tokens/generate-ramps.mjs` (the hex lands verbatim at its step; a light-peaking hue gets a measured finding naming the semantic re-point), vendor palette → `import-palette.mjs`, extract-from-product → the `adopt/infer-tokens.mjs` flow.
-2. **`css-systems`** — wire the token output into the chosen CSS system so `color.bg.accent` is reachable the idiomatic way (a Tailwind `@theme` block, a vanilla-extract contract, a StyleX `defineVars`, a Panda preset, a CSS var sheet).
-3. **`motion-system`** — motion tokens, the reduced-motion strategy, the shared animation primitives. This runs *before* the components deliberately: `Dialog` animates on day one, so the motion tokens and reduced-motion pattern must already exist for its author to consume.
-4. **Install the primitive layer and scaffold the shared harness** — install the chosen primitive package, copy the test harness (`${CLAUDE_PLUGIN_ROOT}/templates/testing/vitest.config.ts`, `vitest.setup.ts`) and the lint configs once, now, so the parallel authors below never race to create them. Copy the governance scaffolds in the same pass — `${CLAUDE_PLUGIN_ROOT}/templates/governance/` ships `CONTRIBUTING.md` (the draft→stable gate), an RFC template and a `CODEOWNERS.example` — because "nobody owns it" is a failure mode you prevent at scaffold time, not one you retrofit. Copy the codemod runner too (`${CLAUDE_PLUGIN_ROOT}/templates/codemods/`, wired as `npm run codemod`): it earns nothing today and everything at the first breaking change.
+```
+                 ┌─ scaffold + install ────────────────────────────┐
+ brief written ──┤                                                 ├─ barrier ─┐
+                 └─ tokens ──→ ┌─ css-systems ─┐                   │           │
+                               └─ motion ──────┘─── barrier ───────┘           │
+                                                                               │
+   ┌───────────────────────────────────────────────────────────────────────────┘
+   └─ Button ∥ TextField ∥ Dialog ∥ Icon+layout ── barrier ─→ registry (parent, ONCE)
+                                                        └─→ lint ∥ inventory ─→ verify
+```
 
-**Fan out — four `ds-component-author` subagents, dispatched in a single message** (the full v1 build order beyond this wave is `references/component-roadmap.md` — read it before promising anyone a component list):
+`references/build-phases.md` is the contract that makes this safe: the phase graph, a
+file-ownership table per agent, and the four races ownership prevents. **Read it before
+dispatching anything** — concurrency here is safe *because* of the ownership rules, not
+despite them. The load-bearing ones: only one agent ever installs, only one agent writes
+build config, nobody but the parent builds the registry, and no agent runs a whole-project
+verification sweep.
+
+### How to run it
+
+**Preferred — the shipped workflow.** If the `Workflow` tool is available, run
+`${CLAUDE_PLUGIN_ROOT}/templates/workflows/build-design-system.mjs`, passing the plugin root
+(as an absolute path — `${CLAUDE_PLUGIN_ROOT}` does not expand inside a workflow script), the
+DS root and the parsed brief:
+
+```
+Workflow({ scriptPath: '<plugin root>/templates/workflows/build-design-system.mjs',
+           args: { pluginRoot: '<abs>', dsRoot: '.', brief: <the config you just wrote> } })
+```
+
+It encodes the graph above as deterministic phases, keeps every agent's file output out of
+this conversation, and returns a structured report of what was built, what failed and what
+needs a decision. It runs in the background; you get a notification when it completes.
+
+**Fallback — parallel subagent dispatch.** Same graph, same ownership rules, one message per
+phase with several `Agent` calls in it. Agents dispatched in separate messages run serially
+and you have bought nothing. `build-phases.md` ends with the exact dispatch sequence.
+
+### The wave-1 components, and why these four
 
 - `Button` — variants, sizes, states, icon slots
 - `TextField` — label/description/error, controlled + uncontrolled, form integration
 - `Dialog` — portal, focus trap, scroll lock, animation
 - `Icon` + the layout primitives `Box`, `Stack`, `Inline` — one agent for all four, because they share a property: no state, no ARIA of their own, nothing to wrap. Icon starts from `${CLAUDE_PLUGIN_ROOT}/templates/components/Icon/Icon.tsx` (the `icon-system` skill owns the library decision); the layout primitives take token-gated style props only, and the roadmap explains why they belong in wave 1 — they are what stops product teams hand-rolling flex divs on day one.
 
-Button, TextField and Dialog exercise every hard problem in the system — polymorphism, forms, portals, focus, motion. Get them right and the rest are variations. Get them wrong and you rewrite fifty components. All four dispatches are **independent of each other** once tokens, CSS wiring and motion exist — each writes only its own directories, contract tests and `.meta.json` — so build them concurrently. Tell each agent explicitly: the harness and configs already exist; consult `component-api-design`, `primitive-libraries`, `css-systems` and `component-testing` as it works; and **do not regenerate the registry** — concurrent regens race on writing `registry.json`. When all four return, the parent runs the registry build once.
+Button, TextField and Dialog exercise every hard problem in the system — polymorphism, forms,
+portals, focus, motion. Get them right and the rest are variations. Get them wrong and you
+rewrite fifty components. The full v1 build order beyond this wave is
+`references/component-roadmap.md` — read it before promising anyone a component list.
 
-Stop and show the user here. Three real components in their colours is the moment they can tell you it's wrong — and it is much cheaper to hear that then than after fifty.
+**Init stops after wave 1.** Everything later multiplies whatever the wave-1 grammar got
+right or wrong, so the user must see three real components in their own colours before fifty
+more are built on the same assumptions. The inventory site opening in their browser at the
+end of Step 6 *is* that gate — it is a far better one than a wall of text, because it is the
+fastest way for them to spot the thing they want changed. Offer wave 2 there; build it in
+`/design-system:component`, not here.
 
-**Serial tail:**
-
-5. **`design-system-linting`** — the enforcement layer: token rules, a11y rules, import boundaries.
-6. **`component-inventory`** — the registry generator, then the site that reads it (including the authored Patterns and Content starter pages), then the AI surface: `AGENTS.md` and `llms.txt`, both generated from the registry, plus the registry MCP server (`${CLAUDE_PLUGIN_ROOT}/templates/mcp/server.mjs`, wired as `npm run mcp`). Wire visual regression here too — `${CLAUDE_PLUGIN_ROOT}/templates/testing/playwright.config.ts` and `${CLAUDE_PLUGIN_ROOT}/templates/testing/vrt/inventory.vrt.spec.ts` screenshot the inventory site itself, so every component's visual baseline comes free with its docs page. Independent of step 5 (lint reads the generated token file, inventory reads the registry) — run them in either order, or as two parallel subagents if the components came back clean.
-7. **`packaging-distribution`** — only if the brief says package.
+The phases in order, each a skill to invoke rather than improvise: `design-tokens` →
+`css-systems` ∥ `motion-system` → four `ds-component-author` subagents → the parent's single
+registry build → `design-system-linting` ∥ `component-inventory` → `packaging-distribution`
+(only if the brief says package).
 
 ## Step 6 — Verify, then report
 

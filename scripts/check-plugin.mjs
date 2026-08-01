@@ -18,7 +18,11 @@
  *      contrast case (a broken fg/bg pair must exit non-zero), --check
  *      staleness, registry build + --check, and the palette importer's
  *      no-package failure mode.
- *   5. TSX parse gate — tsc --noEmit --noResolve over templates/**\/*.tsx,
+ *   5. Workflow scripts — templates/workflows/*.mjs parse (once the export is
+ *      stripped and the top-level return wrapped), meta is a pure literal,
+ *      every phase() title matches a meta.phases entry, and none of the
+ *      resume-breaking globals (Date.now, new Date, Math.random) appear.
+ *   6. TSX parse gate — tsc --noEmit --noResolve over templates/**\/*.tsx,
  *      ignoring the three sanctioned error classes (absent dependencies).
  *      Warn-skips when tsc is not on PATH.
  *
@@ -346,7 +350,65 @@ section('Template smoke runs');
 }
 
 // ---------------------------------------------------------------------------
-// 5. TSX parse gate
+// 5. Workflow scripts
+//
+// These run under the Workflow tool, not node: they combine `export const meta`
+// with a top-level `return`, which is neither valid ESM nor CJS, so node --check
+// only accepts them once the export is stripped and the body wrapped. Beyond
+// syntax, three things fail silently at RUN time and are cheap to catch here:
+// a computed `meta` (must be a pure literal), a phase() title with no matching
+// meta.phases entry (its progress group silently detaches), and the banned
+// non-deterministic globals (they throw, because they would break resume).
+// ---------------------------------------------------------------------------
+section('Workflow scripts');
+{
+  const wfDir = join(TEMPLATES, 'workflows');
+  if (!existsSync(wfDir)) {
+    warn('no templates/workflows/ — skipping');
+  } else {
+    const scratch = mkdtempSync(join(tmpdir(), 'ds-wf-'));
+    try {
+      const files = [...walk(wfDir)].filter((f) => f.endsWith('.mjs'));
+      for (const file of files) {
+        const name = relative(TEMPLATES, file);
+        const src = readFileSync(file, 'utf8');
+
+        const wrapped = join(scratch, basename(file));
+        writeFileSync(wrapped, `(async () => {\n${src.replace(/^export const meta/m, 'const meta')}\n})()`);
+        const r = spawnSync(process.execPath, ['--check', wrapped], { encoding: 'utf8' });
+        if (r.status !== 0) { fail(`${name}: syntax error\n${r.stderr}`); continue; }
+
+        const metaBlock = /^export const meta = \{[\s\S]*?\n\}/m.exec(src);
+        if (!metaBlock) { fail(`${name}: no \`export const meta = {\` block`); continue; }
+        const body = metaBlock[0];
+        if (!/\bname:\s*['"]/.test(body) || !/\bdescription:\s*['"]/.test(body))
+          fail(`${name}: meta needs literal name + description`);
+        // Pure literal: no interpolation, spreads or calls inside the meta block.
+        if (/\$\{|\.\.\.|[A-Za-z_$][\w$]*\s*\(/.test(body.replace(/^export const meta = /, '')))
+          fail(`${name}: meta must be a PURE literal — no interpolation, spreads or calls`);
+
+        const declared = new Set([...body.matchAll(/title:\s*['"]([^'"]+)['"]/g)].map((m) => m[1]));
+        const called = new Set([...src.matchAll(/(?:^|[^\w.])phase\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]));
+        for (const t of called)
+          if (!declared.has(t)) fail(`${name}: phase(${JSON.stringify(t)}) has no matching meta.phases entry`);
+        for (const t of declared)
+          if (!called.has(t)) fail(`${name}: meta.phases declares "${t}" but no phase() call uses it`);
+
+        // Banned inside a workflow: they throw at run time (resume determinism).
+        for (const banned of [/\bDate\.now\s*\(/, /\bnew Date\s*\(\s*\)/, /\bMath\.random\s*\(/]) {
+          const hit = banned.exec(src);
+          if (hit) fail(`${name}: uses ${hit[0]} — throws inside a workflow (breaks resume)`);
+        }
+      }
+      ok(`${files.length} workflow script(s): parse, pure literal meta, phases matched, no banned globals`);
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 6. TSX parse gate
 // ---------------------------------------------------------------------------
 section('TSX parse gate');
 {

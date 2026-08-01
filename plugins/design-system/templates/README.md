@@ -20,7 +20,23 @@ adopt/         infer-tokens.mjs — brownfield adoption: scan hardcoded values, 
 figma/         variables-to-dtcg.mjs (Figma variables → token files, --diff drift
                check) + registry-to-codeconnect.mjs (Code Connect files from the
                registry) + the variables fixture
+workflows/     build-design-system.mjs — the parallel scaffold, run by the Workflow
+               tool after /design-system:init writes the brief
 ```
+
+### `workflows/build-design-system.mjs`
+
+Not a build script — a **Workflow script**, run by the `Workflow` tool rather than by `node`.
+It is the executable form of the phase graph in the architect skill's
+`references/build-phases.md`: two chains that rejoin (scaffold+install under
+tokens → css ∥ motion), then four component authors in parallel, then lint ∥ inventory, with
+the registry built exactly once by the parent in between. Ten agents, four phases, disjoint
+file ownership per agent.
+
+It takes `args: { pluginRoot, dsRoot, brief }` — `pluginRoot` must be an **absolute path**,
+because `${CLAUDE_PLUGIN_ROOT}` does not expand inside a workflow script. Top-level `return`
+and `export const meta` mean it is neither plain ESM nor CommonJS; to syntax-check it, strip
+the `export` and wrap the body in an async IIFE before `node --check`.
 
 ## The five scripts
 
