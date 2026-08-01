@@ -7,6 +7,7 @@ config/        design-system.config.json — the brief, plus its JSON schema
 tokens/        DTCG sources (primitive · semantic.light · semantic.dark · component)
                + build.mjs — the token engine and contrast gate
                + generate-ramps.mjs — brand hex → the five OKLCH ramps
+               + extract-brand.mjs — brand colour candidates from a folder or a URL
                + import-palette.mjs — rewrite the primitive ramps from Tailwind/Radix
 registry/      registry.schema.json + build-registry.mjs — the catalogue generator
 components/    reference components: Button (Tailwind/CVA and CSS Modules forms), Icon,
@@ -38,9 +39,9 @@ because `${CLAUDE_PLUGIN_ROOT}` does not expand inside a workflow script. Top-le
 and `export const meta` mean it is neither plain ESM nor CommonJS; to syntax-check it, strip
 the `export` and wrap the body in an async IIFE before `node --check`.
 
-## The five scripts
+## The six scripts
 
-All are **dependency-free Node ESM**, on purpose: they run in CI, in a pre-commit hook, and on a designer's machine that has never run `npm install`. (The palette importer reads palette *data* from the project's own `tailwindcss` / `@radix-ui/colors` install, but needs nothing installed to run and fails with instructions when the source package is absent.)
+All are **dependency-free Node ESM**, on purpose: they run in CI, in a pre-commit hook, and on a designer's machine that has never run `npm install`. (The palette importer reads palette *data* from the project's own `tailwindcss` / `@radix-ui/colors` install, but needs nothing installed to run and fails with instructions when the source package is absent. `extract-brand --url` uses the built-in global fetch — network, but no dependency.)
 
 ### `tokens/build.mjs`
 
@@ -75,6 +76,29 @@ per hue, the neutral uses its own L column (the 500/600 dual text constraints).
 Contrast is measured after generation — a light-peaking hue (greens, ambers) gets a
 finding naming its real fill step ("point `color.bg.accent` at `{color.accent.700}`")
 instead of a distorted ramp. Deterministic: same hex in, byte-identical file out.
+
+### `tokens/extract-brand.mjs`
+
+```bash
+node tokens/extract-brand.mjs --dir ./brand
+node tokens/extract-brand.mjs --url https://example.com
+node tokens/extract-brand.mjs --file logo.svg --top 12 --json
+```
+
+The answer to "what is your brand hex" when nobody remembers it. Reads every colour literal
+out of `.svg`, `.css`, `.html`, `.json`, `.md` and code files — hex, `rgb()`, `hsl()`,
+`oklch()` — clusters them in OKLab so `#7C3AED`, `rgb(124,58,238)` and `#7b39ec` collapse
+into one candidate, separates neutrals (chroma < 0.03) from real brand hues, and ranks by
+occurrence. `--url` fetches the page and up to ten of its linked stylesheets using the
+built-in global fetch.
+
+Each candidate prints the white-text contrast it would have as a solid fill, which is the
+same measure `build.mjs`'s contrast gate applies — so a light-peaking accent is visible
+*before* a ramp is generated from it.
+
+**It does not decode raster images or PDFs**, and it lists what it skipped rather than
+dropping it silently — a logo that exists only as `.png` has to be read visually and folded
+in by hand. Deterministic: same inputs, byte-identical output.
 
 ### `tokens/import-palette.mjs`
 

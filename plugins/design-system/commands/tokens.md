@@ -16,20 +16,26 @@ If there is no `tokens/*.tokens.json` (search upward from cwd), switch to **crea
 1. **Survey before asking.** Read `design-system.config.json` if it exists (CSS system,
    prefix), check `package.json` for `tailwindcss`, glance at existing CSS for a brand
    colour. Every found fact is a question you skip.
-2. **One `AskUserQuestion` round** (≤4 questions): **colour source** (brand hex →
-   generated OKLCH ramps · vendor palette (Tailwind/Radix) · extract from existing
-   product code · tuned default preset), **type scale ratio** (1.200 minor third,
-   recommended for product UI · 1.250 · 1.125 dense · 1.333 editorial), **density**
-   (comfortable only · + compact for data-dense UIs), and **CSS system** only if no
-   config said so.
+2. **One `AskUserQuestion` round** (≤4 questions): **colour source** (brand assets I
+   extract — a folder or a live URL · brand hex → generated OKLCH ramps · vendor palette
+   (Tailwind/Radix) · tuned default preset; extract-from-product-code via Other),
+   **type scale ratio** (1.200 minor third, recommended for product UI · 1.250 · 1.125
+   dense · 1.333 editorial), **density** (comfortable only · + compact for data-dense
+   UIs), and **CSS system** only if no config said so.
 
-   If the answer is "brand hex", collect it with a **second `AskUserQuestion`**, not as
-   prose — offer four hexes verified to clear the contrast gate as generated (`#2563EB`
-   blue, `#7C3AED` violet, `#E11D48` rose, `#EA580C` orange) and let the user type their
-   real brand colour into **Other**. Every setting goes through a question; a value typed
-   as conversation is one you cannot reliably write into the brief. A light-peaking hue
-   (teal, cyan, green) typed into Other is fine — take it and apply the generator's
-   documented re-point rather than substituting a colour they did not choose.
+   Then a **second `AskUserQuestion`**, never prose — every setting goes through a
+   question, because a value typed as conversation is one you cannot reliably write into
+   the brief:
+   - *Brand assets* → offer the asset paths the survey actually found, plus "a website —
+     URL in Other". Run `${CLAUDE_PLUGIN_ROOT}/templates/tokens/extract-brand.mjs` over
+     the answer, then confirm the accent with a third question whose options are the
+     extracted candidates. Frequency ranks them; the user decides — the most common colour
+     in a stylesheet is often a border grey.
+   - *Brand hex* → offer four hexes verified to clear the contrast gate as generated
+     (`#2563EB` blue, `#7C3AED` violet, `#E11D48` rose, `#EA580C` orange) with **Other**
+     for the real one. A light-peaking hue (teal, cyan, green) typed into Other is fine —
+     take it and apply the generator's documented re-point rather than substituting a
+     colour they did not choose.
 3. **Copy `${CLAUDE_PLUGIN_ROOT}/templates/tokens/`** into the project, write or update
    `design-system.config.json` (`stack.cssSystem`, `tokens.prefix`). Then run the
    chosen colour path — these are the tested scripts, never hand-compute ramps:

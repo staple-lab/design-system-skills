@@ -15,7 +15,8 @@ The short version of what must happen — the skill has the detail:
 2. **Interview** the user with `AskUserQuestion` in exactly three rounds:
    - Round 1 — *stack*: headless primitive layer · component layer · CSS system · motion library.
    - Round 2 — *design + delivery*: colour direction · typography · distribution · scope.
-   - Round 3 — *the specifics*: brand hex (only if the colour answer needs one) · icon pack · system name · default theme.
+   - Round 3 — *the specifics*: the brand colour input (only if the colour answer left one open) · icon pack · system name · default theme.
+   **Never ask the user to go and look up their brand hex.** Most people cannot recite it — the brand exists as a logo, a stylesheet, a live site or a PDF. Survey for brand assets first, offer the paths you actually found (plus a URL via Other), run `${CLAUDE_PLUGIN_ROOT}/templates/tokens/extract-brand.mjs` over them, then confirm the accent with a question whose options are the extracted candidates.
    Pre-select the option that matches `$ARGUMENTS` or the repo, and say why it is recommended.
    **Collect every answer through `AskUserQuestion` — never ask the user to type a setting as prose.** Values that look like free text (a brand hex, a system name) become a question with four good defaults plus **Other**, which is where custom input goes. That is strictly better than a bare prompt, and it is the difference between an answer you can write into the brief and one that arrives as conversation.
 3. **Write the brief** to `design-system.config.json` at the DS root. This file is the contract every later command reads. Show it to the user before building.

@@ -135,6 +135,7 @@ never hand-computed values:
 
 | `tokens.source` in the brief | Run (from `${CLAUDE_PLUGIN_ROOT}/templates/tokens/`) |
 |---|---|
+| brand assets / a website | `node tokens/extract-brand.mjs --dir <path>` or `--url <site>`, then feed the **confirmed** hex to `generate-ramps.mjs`. The confirmation happened in the interview — do not re-rank the candidates here. |
 | one brand hex | `node tokens/generate-ramps.mjs --accent "<hex>"` — the hex lands verbatim at its nearest step |
 | vendor palette | `node tokens/import-palette.mjs --source tailwind\|radix …` |
 | extract from product | `node adopt/infer-tokens.mjs --write` (from `${CLAUDE_PLUGIN_ROOT}/templates/adopt/`) |

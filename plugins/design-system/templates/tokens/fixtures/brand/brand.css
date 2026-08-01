@@ -1,0 +1,19 @@
+/* Fixture for extract-brand.mjs. Deliberately mixes notations and includes
+   near-duplicates of the accent, so the clustering step has something to do. */
+:root {
+  --brand-primary: #7C3AED;
+  --brand-primary-alt: rgb(124, 58, 238);   /* same colour, different notation */
+  --brand-primary-hover: #7b39ec;           /* within the merge distance */
+  --brand-ink: #1E1B4B;
+  --brand-paper: #ffffff;
+  --brand-mist: hsl(240, 24%, 96%);
+  --brand-signal: oklch(63.7% 0.208 25);    /* a warm secondary */
+}
+
+.button {
+  background: var(--brand-primary);
+  color: #fff;
+  border: 1px solid rgba(124, 58, 238, 0.4);
+}
+
+.badge { background: #1E1B4B; color: #F5F5FA; }

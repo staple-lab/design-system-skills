@@ -47,13 +47,13 @@ Three rounds, and nothing typed as prose — options are pre-selected from what 
 - **Motion**: Motion (`motion/react`) · GSAP · CSS-only · both
 
 **Round 2 — design + delivery**
-- **Colour**: one brand hex → generated OKLCH ramp · neutral+accent preset · extracted from the existing product · multi-brand
+- **Colour**: brand assets I extract (a folder, or a live URL) · one brand hex → generated OKLCH ramp · neutral+accent preset · multi-brand
 - **Typography**: system stack · UI sans · display serif + body sans · licensed fonts
 - **Distribution**: in-repo · workspace package · private npm · public npm
 - **Scope**: everything · foundations first · fit into an existing system · docs only
 
 **Round 3 — the specifics** *(only what rounds 1–2 left open)*
-- **Brand hex**: four hues verified to clear the contrast gate as generated, or your own via Other
+- **Brand colour**: where it lives — the asset folders actually found in your repo, a website URL, or a hex. You are never asked to go and look one up: point at the assets and the palette gets extracted, clustered and handed back as options to confirm.
 - **Icons**: Lucide · Phosphor · Heroicons · your own SVG set
 - **Name**: candidates derived from the repo, or your own
 - **Theme**: light-first · dark-first · follow the OS · light only

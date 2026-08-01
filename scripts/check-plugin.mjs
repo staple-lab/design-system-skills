@@ -274,6 +274,49 @@ section('Template smoke runs');
       run(['tokens/build.mjs']);
     }
 
+    // Brand extraction: deterministic over the committed fixture, clusters
+    // notations of one colour together, never proposes a neutral as the accent,
+    // and REPORTS what it could not decode rather than silently dropping it.
+    {
+      const e1 = run(['tokens/extract-brand.mjs', '--dir', 'tokens/fixtures/brand', '--json']);
+      const e2 = run(['tokens/extract-brand.mjs', '--dir', 'tokens/fixtures/brand', '--json']);
+      if (e1.status !== 0) fail(`extract-brand.mjs failed on the fixture:\n${e1.stderr || e1.stdout}`);
+      else if (e1.stdout !== e2.stdout) fail('extract-brand.mjs is not deterministic — same fixture produced different output');
+      else {
+        try {
+          const r = JSON.parse(e1.stdout);
+          if (r.suggested !== '#7c3aed') fail(`extract-brand suggested ${r.suggested}, expected #7c3aed`);
+          const top = r.candidates[0];
+          // #7C3AED, rgb(124,58,238), #7b39ec and the svg's uses are ONE colour.
+          if (top.count !== 7) fail(`extract-brand clustered the accent into ${top.count} hits, expected 7`);
+          if (!top.solidFillReady) fail('extract-brand called the violet accent light-peaking — it clears 4.5:1');
+          if (!r.skipped.some((p) => p.endsWith('.png')))
+            fail('extract-brand did not report the undecodable .png — a silent skip is the bug this guards');
+          if (r.candidates.some((c) => c.chroma < 0.03))
+            fail('extract-brand proposed a neutral as a brand candidate');
+          if (!r.neutrals.some((n) => n.hex === '#ffffff'))
+            fail('extract-brand did not report white among the neutrals');
+          ok('extract-brand: deterministic, clusters notations, reports undecodable sources');
+        } catch (e) { fail(`extract-brand JSON: ${e.message}`); }
+      }
+
+      // Negative case: nothing to find must exit non-zero with a hint.
+      mkdirSync(join(scratch, 'empty-brand'), { recursive: true });
+      writeFileSync(join(scratch, 'empty-brand', 'notes.md'), '# no colours here\n');
+      const e3 = run(['tokens/extract-brand.mjs', '--dir', 'empty-brand']);
+      if (e3.status === 0) fail('extract-brand exited 0 with no colours found — it must fail, not report an empty brand');
+      else ok('extract-brand exits non-zero when there is nothing to extract');
+
+      // The whole point: extracted hex → ramps → the contrast gate.
+      const e4 = run(['tokens/generate-ramps.mjs', '--accent', '#7c3aed']);
+      const e5 = run(['tokens/build.mjs']);
+      if (e4.status !== 0 || e5.status !== 0)
+        fail(`extracted accent did not survive ramps+gate:\n${e4.stderr || e5.stderr}`);
+      else ok('extract-brand → generate-ramps → contrast gate green end to end');
+      cpSync(join(TEMPLATES, 'tokens'), join(scratch, 'tokens'), { recursive: true });
+      run(['tokens/build.mjs']);
+    }
+
     // Adopt inference: deterministic clustering over the committed fixture, and
     // the inferred ramps must clear the contrast gate end to end.
     {

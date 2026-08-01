@@ -35,6 +35,10 @@ ls -d src/components src/ui packages/* 2>/dev/null
 rg -l "tailwind|@radix-ui|@base-ui|react-aria|styled-components|@emotion|\.module\.css|@stylexjs|@pandacss|@vanilla-extract" --glob '!node_modules' | head -30
 ls tailwind.config.* postcss.config.* panda.config.* 2>/dev/null
 rg -c "className=" --glob '*.tsx' | wc -l    # rough size of the surface being standardised
+
+# brand assets — the colour question is answerable from these, so find them first
+ls -d brand branding assets/brand public/brand design static/brand 2>/dev/null
+find . -iname '*logo*' -o -iname '*brand*' | grep -v node_modules | head -10
 ```
 
 Also look at what the product already looks like — read a couple of the busiest components. You are usually not on a greenfield; you are formalising something that half-exists. Name what you found in the interview ("you're already on Radix + Tailwind, so I've pre-selected those").
@@ -64,10 +68,17 @@ Adjust the recommendation to the survey: an existing Radix codebase makes Radix 
 
 | # | Header | Question | Options |
 |---|--------|----------|---------|
-| 1 | `Colour` | Where does the colour system come from? | **One brand hex → generated ramp** — I build a perceptual OKLCH scale around it · **Neutral + accent preset** — a tuned default, pick the accent later · **Extract from the existing product** — I read the current CSS and rationalise it · **Multi-brand** — 2+ themes sharing one semantic layer |
+| 1 | `Colour` | Where does the colour system come from? | **Brand assets I extract** — a folder of logos/stylesheets, or a live URL; I pull the palette out and show you what I found · **One brand hex → generated ramp** — I build a perceptual OKLCH scale around it · **Neutral + accent preset** — a tuned default, pick the accent later · **Multi-brand** — 2+ themes sharing one semantic layer *(extract-from-product-code and "here is my full palette" go via Other)* |
 | 2 | `Typography` | What is the type system? | **System stack** — zero network cost, native feel · **UI sans (Inter / Geist / similar)** — the neutral product default · **Display serif + body sans** — editorial contrast · **Licensed/custom fonts** — user provides the files |
 | 3 | `Distribution` | Where does the design system live? | **In-repo** (`src/design-system/`) — no version boundary, fastest iteration · **Workspace package** — monorepo, consumed by sibling apps · **Private npm package** — internal registry, versioned · **Public npm package** — published, changesets + release CI |
 | 4 | `Scope` | What should I build now? | **Everything** — tokens, components, inventory, tests, lint, CI · **Foundations first** — tokens + theming + 3 reference components · **Add to existing system** — fit into what is already here · **Docs + inventory only** — the system exists, it just isn't documented |
+
+**Do not assume the user can recite their brand colour.** Most people cannot — the brand
+exists as a logo, a stylesheet, a live site or a PDF, and the hex lives in one of those.
+Make **Brand assets I extract** the recommendation whenever the survey found anything
+brand-shaped (a `brand/` folder, a `*logo*` file, a deployed URL in the README), and reserve
+the bare-hex option for the case where they clearly already know the value. Asking for a hex
+that the user has to go and look up is a question you could have answered yourself.
 
 ### Round 3 — the specifics (ask only what rounds 1–2 left open)
 
@@ -77,21 +88,60 @@ open** — a round of two questions is correct when that is all that is genuinel
 
 | # | Header | Question | Options (first = recommended) | Ask when |
 |---|--------|----------|-------------------------------|----------|
-| 1 | `Brand hex` | Which colour should I build the ramp around? *(type your exact brand hex in Other)* | Four hexes, one per hue family — see below | colour was "one brand hex", or "multi-brand" (then this is brand 1) |
+| 1 | *colour input* | see the table below | see the table below | the colour answer left it open |
 | 2 | `Icons` | Which icon pack? | **Lucide** — 24px grid, per-icon imports, tree-shakeable, what the surrounding ecosystem assumes · **Phosphor** — six weights from one set · **Heroicons** — outline/solid pair, Tailwind Labs · **Custom brand set** — you provide the SVGs and I build the pipeline | always |
 | 3 | `Name` | What is this system called? | Three candidates derived from the repo — `<dir>-ui`, `@<scope>/ui`, `<Product> Design System` — plus Other | always |
 | 4 | `Theme` | Which theme is the system authored against first? | **Light-first, dark generated** — the common product default · **Dark-first** — author the dark ramp and derive light · **Follow the OS, no default** · **Light only** — add dark later | always |
+
+Question 1 depends on the colour answer, because "where is your brand" has more than one
+right shape:
+
+| Round 2 colour answer | Round 3 question 1 |
+|---|---|
+| **Brand assets I extract** | `Brand source` — options are the **real paths the survey found** (`./brand`, `./public`, a `*logo*` file), plus *"a live website — paste the URL in Other"* and *"somewhere else — path in Other"*. Never offer a path the survey did not actually find; a made-up option that fails on selection is worse than no option. |
+| **One brand hex** | `Brand hex` — the four verified hexes below, with Other for the real one |
+| **Multi-brand** | `Brand source` for brand 1, and say plainly that brand 2 arrives as a token file after wave 1 rather than another interview round |
+| **Neutral + accent preset** | omit — nothing is open |
 
 **The brand-hex options must be hexes that clear the contrast gate as generated**, so the
 first build is green without a re-point. Verified against `generate-ramps.mjs` +
 `build.mjs`: `#2563EB` (blue), `#7C3AED` (violet), `#E11D48` (rose) and `#EA580C` (orange)
 pass; teal `#0D9488`, cyan `#0891B2` and green `#16A34A` are light-peaking and fail until
 the semantic re-point. If the user types one of the latter into **Other**, take it — that is
-their brand, not a mistake — and tell them at the token step that the generator's finding
-moved `bg.accent` one step darker. Never silently substitute a different colour.
+their brand, not a mistake — and tell them the generator's finding moved `bg.accent` one step
+darker. Never silently substitute a different colour.
 
-Record the answers as `tokens.source` + the hex, `stack.icons`, `name`/`displayName`, and
-`tokens.defaultTheme`/`darkTheme`. The `icon-system` skill owns the full icon menu and its
+### Extracting from brand assets
+
+Run the tested script, not your own reading of the files:
+
+```bash
+node tokens/extract-brand.mjs --dir ./brand        # a folder of assets
+node tokens/extract-brand.mjs --url https://…      # a live site, incl. its linked stylesheets
+node tokens/extract-brand.mjs --file logo.svg --json
+```
+
+It reads every colour literal out of `.svg`, `.css`, `.html`, `.json`, `.md` and code files,
+clusters them in OKLab so `#7C3AED`, `rgb(124,58,238)` and `#7b39ec` collapse into one
+candidate, separates neutrals from chromatic candidates, and prints the white-text contrast
+each would have as a solid fill — the same measure the build's contrast gate applies, so a
+light-peaking accent is visible *before* you generate a ramp from it.
+
+**It does not decode raster images or PDFs**, and it lists what it skipped rather than
+dropping it silently. When a logo exists only as `.png`, or the brand guidelines only as
+`.pdf`, **read the file yourself** — the Read tool renders images and PDFs — and fold the
+colours you see into the candidate list. Say which candidates came from the script and which
+from looking; measured and eyeballed are not the same evidence.
+
+Then **confirm with a question, never a guess**: an `AskUserQuestion` whose options are the
+top extracted candidates, each labelled with its hex and what it was found in ("`#7C3AED` —
+×7 across logo.svg and brand.css"), so the user picks the accent rather than accepting your
+ranking. Frequency is a good heuristic and a bad decision-maker: the most common colour in a
+stylesheet is often a border grey, and the brand colour of a site with a dark theme is
+routinely the second or third hit.
+
+Record the answers as `tokens.source` + the resolved hex, `stack.icons`, `name`/`displayName`,
+and `tokens.defaultTheme`/`darkTheme`. The `icon-system` skill owns the full icon menu and its
 trade-offs; do not re-derive them here.
 
 **Never skip the interview because you think you know.** Even when `$ARGUMENTS` names the whole stack, run round 1 with those choices pre-selected — confirming takes one click and catches the case where the user was describing what they have, not what they want.
