@@ -11,6 +11,16 @@ Staple Lab's toolkit for developing design systems and frontends, packaged as a 
 
 Then run `/design-system:init` in any React repo.
 
+## Update
+
+```
+/plugin marketplace update design-system-skills
+/plugin update design-system@design-system-skills
+```
+
+The first refreshes the marketplace manifest from GitHub, the second pulls the new plugin
+version. Restart Claude Code afterwards to load it.
+
 ## Plugins
 
 ### [`design-system`](plugins/design-system)
