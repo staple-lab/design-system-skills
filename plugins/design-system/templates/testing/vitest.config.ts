@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig, configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
@@ -8,6 +8,12 @@ export default defineConfig({
     globals: false, // explicit imports — clearer, and they survive a move to another runner
     setupFiles: ['./vitest.setup.ts'],
     css: true, // CSS Modules resolve, so `styles.button` is a class name and not undefined
+    // The visual-regression suite next door (vrt/inventory.vrt.spec.ts) is PLAYWRIGHT, and
+    // Vitest's default glob claims any *.spec.ts. Collected here, Playwright's test.describe()
+    // throws at import time and fails the whole run even when every unit test passes — which
+    // reads as "the design system's tests are broken" on day one. Spread the defaults rather
+    // than replacing them; a bare array silently re-enables node_modules and dist.
+    exclude: [...configDefaults.exclude, 'tests/vrt/**', '**/*.vrt.spec.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
