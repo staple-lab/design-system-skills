@@ -253,13 +253,39 @@ npm run inventory:build
 
 If a step fails, fix it. Do not report a green build you did not see, and do not describe a step you skipped as done — say which parts are complete and which are not.
 
-**When everything is green, show it, don't describe it.** Launch the inventory dev server in the background and open it in the user's browser:
+### The final act: hand over a working URL
+
+**This is how init ends, every time. Not a summary — a link.** Seeing their own components in
+their own colours is worth more than any report you can write, and it is the fastest way for
+the user to spot the thing they want changed. A summary is something they have to read; a URL
+is something they can click.
+
+Launch the dev server **in the background** — it is a long-running process, and running it in
+the foreground hangs the session until someone kills it:
 
 ```bash
-npm run inventory -- --open    # run in the background; Vite opens the browser itself
+npm run inventory -- --open    # background; Vite opens the browser itself
 ```
 
-Report the URL Vite prints (typically `http://localhost:5173`). Seeing their own components in their own colours is worth more than any summary you can write — it is also the fastest way for the user to spot the thing they want changed. Skip the auto-open when running headless or in CI; print the URL and move on.
+Then **read the port Vite actually printed** and report that:
+
+```
+  VITE v7.0.0  ready in 412 ms
+  ➜  Local:   http://localhost:5173/
+```
+
+**Do not assume 5173.** Vite increments to 5174, 5175 and onward when the port is taken, and
+on a developer machine it very often is. A confidently wrong URL is worse than no URL: it
+sends the user to either a dead page or, worse, somebody else's dev server. Wait for the line,
+copy the port out of it, and if the server has not printed a URL within a few seconds, say so
+and give the manual command instead of inventing an address.
+
+State the URL as the **last thing in your final message**, on its own line, not buried in a
+paragraph of what you built. Everything else — the file map, the npm scripts, the follow-up
+commands, the wave-2 offer — goes above it.
+
+Skip the auto-open (`--open`) when headless or in CI, where there is no browser to open and
+the flag just logs a warning. Print the URL and move on.
 
 ## What separates a design system that gets adopted
 

@@ -412,6 +412,8 @@ return {
   nextForParent: [
     'npm run tokens        (alone, first — everything reads its output)',
     'then IN PARALLEL, one message: npx tsc --noEmit | npm test | npm run lint | npm run inventory:build | npm run registry:check',
-    'then: npm run inventory -- --open, in the background, and report the URL',
+    'FINAL ACT: npm run inventory -- --open, in the BACKGROUND. Read the port Vite actually',
+    '  printed (never assume 5173 — it increments when taken) and give the user that URL on its',
+    '  own line, as the last thing in your message. A link beats any summary you could write.',
   ],
 }
