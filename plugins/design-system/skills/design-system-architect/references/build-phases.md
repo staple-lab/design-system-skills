@@ -65,7 +65,7 @@ writes only what it owns. This is the whole safety mechanism; there is no lockin
 | **B** tokens | `tokens/**` (sources **and** `tokens/dist/`) | the brief | `package.json` — the `tokens` script is already there |
 | **C** css-systems | `src/design-system/styles/**`, the CSS-system's own token bridge | `tokens/dist/` | `vite.config.ts`, `package.json`, `tokens/` |
 | **D** motion | `src/design-system/motion/**` | `tokens/dist/` | the global stylesheet (see the import contract below) |
-| **E–H** component authors | `<paths.components>/<Name>/**` and nothing else | brief, tokens, styles, motion, siblings' *existing* files | each other, `registry.json`, every shared config |
+| **E–H** component authors | `<paths.components>/<Name>/**` and nothing else — including `<Name>.examples.tsx`, which is what makes the component *render* in the inventory rather than appear as a dead code block | brief, tokens, styles, motion, siblings' *existing* files | each other, `registry.json`, every shared config |
 | **J** lint rules | `eslint.config.mjs`, `stylelint.config.mjs`, `tools/eslint-plugin-design-system/**` | `tokens/dist/tokens.json` | `inventory/`, components |
 | **K** inventory + AI | `inventory/**`, `AGENTS.md`, `llms.txt`, `playwright.config.ts`, `tests/vrt/**` | `registry.json`, `tokens/dist/` | lint configs, components |
 

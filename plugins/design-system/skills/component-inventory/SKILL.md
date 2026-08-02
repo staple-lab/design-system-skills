@@ -39,6 +39,10 @@ The build script is `${CLAUDE_PLUGIN_ROOT}/templates/registry/build-registry.mjs
 This is the bar. Anything less and people go read the source instead — which is fine once and fatal at scale.
 
 1. **Live examples**, per variant and per state, with the code visible and copyable. Interactive, not screenshots.
+
+   **"Live" means the real component is mounted on the page — not a syntax-highlighted string of what it would look like.** This is the difference between a catalogue and a list, and it is the one thing readers actually come for: a props table tells them the API exists, a rendered Button tells them what they are getting. The mechanism is a `<Name>.examples.tsx` beside each component, which the site eagerly globs (`components/*/*.examples.tsx`) and renders; the meta file's `code` string is the *caption*, not the example. Ship a component without that file and its page silently degrades to dead code blocks — silently, because nothing fails, so it survives review and lands looking finished.
+
+   **Treat a `stable` or `beta` component with no `.examples.tsx` as a build failure**, the same way an empty a11y section is. `ds-component-author` owns writing the file; the inventory's job is to notice when it is missing rather than to render a placeholder and move on.
 2. **Complete props table** — name, resolved TypeScript type, default, required, description, deprecation notice. Auto-extracted, so it cannot be wrong.
 3. **Anatomy** — the named parts of a compound component, so `Dialog.Footer` is discoverable without reading the exports.
 4. **Keyboard map** — every key, in a table. The most-consulted section of any good design system's docs, and the most commonly missing.

@@ -393,6 +393,62 @@ section('Template smoke runs');
 }
 
 // ---------------------------------------------------------------------------
+// 4b. Live examples contract
+//
+// The inventory renders a component only when a `<Name>.examples.tsx` sits beside
+// it, exporting one component per meta example named `title` with non-alphanumerics
+// stripped. That contract lives in FOUR places — the inventory's glob, the page's
+// export-name derivation, the author agent's instructions, and the Button template —
+// and when they drift the failure is silent: nothing errors, the docs just quietly
+// stop showing components. Which is exactly how it shipped broken once.
+// ---------------------------------------------------------------------------
+section('Live examples contract');
+{
+  const dataTs = readFileSync(join(TEMPLATES, 'inventory', 'src', 'data.ts'), 'utf8');
+  const pageTsx = readFileSync(join(TEMPLATES, 'inventory', 'src', 'ComponentPage.tsx'), 'utf8');
+  const authorMd = readFileSync(join(DS, 'agents', 'ds-component-author.md'), 'utf8');
+
+  const glob = /import\.meta\.glob\(\s*['"]([^'"]+)['"]/.exec(dataTs);
+  if (!glob) fail('inventory/src/data.ts no longer globs example modules');
+  else if (!/\*\.examples\.tsx$/.test(glob[1]))
+    fail(`inventory glob "${glob[1]}" does not end in *.examples.tsx — the documented filename`);
+  else ok(`inventory globs ${glob[1]}`);
+
+  // The page derives the export name by stripping non-alphanumerics from the title.
+  if (!/replace\(\/\[\^A-Za-z0-9\]\/g,\s*''\)/.test(pageTsx))
+    fail('ComponentPage.tsx no longer derives the export name by stripping non-alphanumerics — update the agent instructions to match');
+  else ok('ComponentPage derives export names by stripping non-alphanumerics');
+
+  // The author must be TOLD to write the file, or nothing ever creates one.
+  for (const [needle, why] of [
+    ['.examples.tsx', 'the filename'],
+    ['non-alphanumeric', 'the export-name rule'],
+  ]) {
+    if (!authorMd.includes(needle))
+      fail(`ds-component-author.md does not mention ${why} ("${needle}") — components will ship with dead previews`);
+  }
+  ok('ds-component-author is instructed to write the examples file');
+
+  // The Button template must practise it, and its exports must match its own meta.
+  const btnDir = join(TEMPLATES, 'components', 'Button');
+  const exFile = join(btnDir, 'Button.examples.tsx');
+  if (!existsSync(exFile)) fail('templates/components/Button has no Button.examples.tsx — the reference component must model the contract');
+  else {
+    const ex = readFileSync(exFile, 'utf8');
+    const exports = new Set([...ex.matchAll(/export function ([A-Za-z0-9_]+)\s*\(/g)].map((m) => m[1]));
+    const meta = JSON.parse(readFileSync(join(btnDir, 'Button.meta.json'), 'utf8'));
+    const titles = (meta.examples ?? []).map((e) => e.title);
+    if (!titles.length) fail('Button.meta.json has no examples to model');
+    for (const t of titles) {
+      const want = t.replace(/[^A-Za-z0-9]/g, '');
+      if (!exports.has(want) && !exports.has(`Example${want}`))
+        fail(`Button.examples.tsx has no export for meta example "${t}" (expected ${want}) — a silently dead preview`);
+    }
+    ok(`Button.examples.tsx covers all ${titles.length} meta examples`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // 5. Workflow scripts
 //
 // These run under the Workflow tool, not node: they combine `export const meta`
