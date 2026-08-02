@@ -409,6 +409,29 @@ section('Workflow scripts');
   if (!existsSync(wfDir)) {
     warn('no templates/workflows/ — skipping');
   } else {
+    // Representative inputs per script, so the dry run below can exercise the
+    // real control flow. `expect` is the agent count that shape should produce.
+    const SAMPLE_ARGS = {
+      'build-design-system.mjs': [
+        { label: 'in-repo', expect: 10, args: {
+          pluginRoot: '/plugin', dsRoot: '/project',
+          brief: {
+            stack: { primitives: 'base-ui', componentLayer: 'own', cssSystem: 'css-modules', motion: 'css', icons: 'lucide' },
+            paths: { root: 'src/design-system', components: 'src/design-system/components' },
+            distribution: { mode: 'in-repo' },
+          },
+        } },
+        { label: 'published', expect: 11, args: {
+          pluginRoot: '/plugin', dsRoot: '/project',
+          brief: {
+            stack: { primitives: 'radix', componentLayer: 'own', cssSystem: 'tailwind', motion: 'motion', icons: 'lucide' },
+            paths: { root: 'src/ui', components: 'src/ui/components' },
+            distribution: { mode: 'public-npm' },
+          },
+        } },
+      ],
+    };
+
     const scratch = mkdtempSync(join(tmpdir(), 'ds-wf-'));
     try {
       const files = [...walk(wfDir)].filter((f) => f.endsWith('.mjs'));
@@ -441,6 +464,72 @@ section('Workflow scripts');
         for (const banned of [/\bDate\.now\s*\(/, /\bnew Date\s*\(\s*\)/, /\bMath\.random\s*\(/]) {
           const hit = banned.exec(src);
           if (hit) fail(`${name}: uses ${hit[0]} — throws inside a workflow (breaks resume)`);
+        }
+
+        // Dry run: execute the REAL control flow with agent() stubbed. Every
+        // check above is static, and static checks cannot see the entry
+        // contract — which is exactly where this bit in the field: a run died
+        // 14ms in, having spawned nothing, because `args` arrived as a JSON
+        // string and `args.pluginRoot` was undefined. A script that cannot
+        // start is not a syntax error, so nothing above would ever catch it.
+        const variants = SAMPLE_ARGS[basename(file)];
+        if (!variants) { warn(`${name}: no sample args registered — dry run skipped`); continue; }
+
+        const factory = new Function(
+          'return (async (agent, parallel, pipeline, phase, log, args, budget) => {\n' +
+            src.replace(/^export const meta/m, 'const meta') +
+            '\n})',
+        )();
+
+        const dryRun = async (a) => {
+          const calls = [];
+          const stubAgent = (prompt, opts = {}) => {
+            calls.push({ prompt, ...opts });
+            return Promise.resolve({ ok: true, summary: 'stub', filesWritten: [], commands: [], followUps: [] });
+          };
+          const par = (thunks) => Promise.all(thunks.map((t) => t()));
+          const pipe = (items, ...stages) =>
+            Promise.all(items.map(async (item, i) => {
+              let v = item;
+              for (const s of stages) v = await s(v, item, i);
+              return v;
+            }));
+          const budget = { total: null, spent: () => 0, remaining: () => Infinity };
+          const out = await factory(stubAgent, par, pipe, () => {}, () => {}, a, budget);
+          return { calls, out };
+        };
+
+        try {
+          let baseline = null;
+          for (const v of variants) {
+            const run = await dryRun(v.args);
+            if (v.expect != null && run.calls.length !== v.expect)
+              fail(`${name} [${v.label}]: dry run spawned ${run.calls.length} agents, expected ${v.expect}`);
+            for (const c of run.calls) {
+              if (!c.label) fail(`${name} [${v.label}]: an agent() call has no label`);
+              if (c.phase && !declared.has(c.phase))
+                fail(`${name} [${v.label}]: agent phase "${c.phase}" is not declared in meta.phases`);
+            }
+            if (!baseline) baseline = run;
+          }
+
+          // The regression that motivated this whole group.
+          const asString = await dryRun(JSON.stringify(variants[0].args));
+          if (asString.calls.length !== baseline.calls.length)
+            fail(`${name}: args as an object and as a JSON string produce different runs ` +
+                 `(${baseline.calls.length} vs ${asString.calls.length} agents) — the entry contract must accept both`);
+
+          // And the negative case: no args at all must fail loudly, naming the field.
+          let threw = null;
+          try { await dryRun(undefined); } catch (e) { threw = e; }
+          if (!threw) fail(`${name}: ran with no args at all — the entry contract is not validated`);
+          else if (!/pluginRoot/.test(threw.message))
+            fail(`${name}: the missing-args error does not name the missing field: ${threw.message}`);
+
+          ok(`${name}: dry run green — ${variants.map((v) => `${v.label} ${v.expect}`).join(', ')} agents, ` +
+             `object/string args agree, missing args rejected`);
+        } catch (e) {
+          fail(`${name}: dry run threw — ${e.message}`);
         }
       }
       ok(`${files.length} workflow script(s): parse, pure literal meta, phases matched, no banned globals`);

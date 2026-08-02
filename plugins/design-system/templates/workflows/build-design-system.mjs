@@ -22,16 +22,30 @@ export const meta = {
 //   }
 // ---------------------------------------------------------------------------
 
-const P = args.pluginRoot
+// Harnesses differ on whether `args` arrives parsed or as the raw JSON string.
+// Accept both. This bit once for real: the run died 14ms in with every phase
+// unrun, because `args` was a string and `args.pluginRoot` was undefined — the
+// most expensive possible form of a trivial bug.
+const IN = typeof args === 'string' ? JSON.parse(args) : (args ?? {})
+
+const P = IN.pluginRoot
 const T = P + '/templates'
-const ROOT = args.dsRoot || '.'
-const BRIEF = args.brief || {}
+const ROOT = IN.dsRoot || '.'
+const BRIEF = IN.brief || {}
 const STACK = BRIEF.stack || {}
 const PATHS = BRIEF.paths || {}
 const COMPONENTS_DIR = PATHS.components || 'src/design-system/components'
 const PACKAGED = (BRIEF.distribution || {}).mode && (BRIEF.distribution || {}).mode !== 'in-repo'
 
-if (!P) throw new Error('args.pluginRoot is required — pass the absolute path to plugins/design-system')
+if (!P) {
+  const shape =
+    args == null ? String(args)
+    : typeof args === 'string' ? `a ${args.length}-char string that parsed to keys: ${Object.keys(IN).join(', ')}`
+    : `an object with keys: ${Object.keys(IN).join(', ')}`
+  throw new Error(
+    'args.pluginRoot is required — the absolute path to plugins/design-system. Received ' + shape,
+  )
+}
 
 const REPORT = {
   type: 'object',
